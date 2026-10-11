@@ -10,7 +10,7 @@ const args = process.argv.slice(2);
 const allowAnyone = args.includes("--allow-anyone");
 const nameIndex = args.indexOf("--name");
 // GAS の「デプロイを管理」で環境を見分けるための名前（デプロイの説明）
-const name = nameIndex >= 0 ? args[nameIndex + 1] : "web";
+const name = nameIndex >= 0 ? args[nameIndex + 1] : "development";
 const spreadsheetId = args.find((a, i) => !a.startsWith("--") && (nameIndex < 0 || i !== nameIndex + 1));
 
 if (!spreadsheetId || !name || name.startsWith("--")) {

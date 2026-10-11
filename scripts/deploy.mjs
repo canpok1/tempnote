@@ -7,7 +7,7 @@ import { assertClaspLogin, build, CLASP_FILE, DEPLOY_FILE, ROOT_DIR, run, webApp
 
 const saved = existsSync(DEPLOY_FILE) ? JSON.parse(readFileSync(DEPLOY_FILE, "utf8")) : {};
 const deploymentId = process.env.DEPLOYMENT_ID || saved.deploymentId;
-const name = process.env.DEPLOY_NAME || saved.name || "web";
+const name = process.env.DEPLOY_NAME || saved.name || "development";
 const allowAnyone = process.env.ALLOW_ANYONE ? process.env.ALLOW_ANYONE === "true" : saved.allowAnyone === true;
 
 if (!existsSync(CLASP_FILE)) {
