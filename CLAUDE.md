@@ -26,7 +26,9 @@
 
 ## API を足す
 
-`src/shared/api.ts` の `Api` に型を足し、ユースケースと `src/server/entry/dispatcher.ts` の振り分けを足す。振り分け表は `Record<ApiMethod, ...>` なので、足し忘れると型チェックで落ちる。画面からは `src/client/transport/` の `callApi` だけで呼ぶ。
+`src/shared/api.ts` の `Api` に型を足し、`src/server/application/useCases.ts` に同じ名前のユースケースを足す。dispatcher はメソッド名でユースケースを直接引くので、振り分けの追加は要らない。ユースケースの戻り値は `Api` のメソッドと1対1になるよう `satisfies` で縛っているので、足し忘れると型チェックで落ちる。画面からは `src/client/transport/` の `callApi` だけで呼ぶ。
+
+サーバーから読み込んで表示する画面は、`useApi` の結果を `src/client/screens/ApiView.tsx` に渡す。読み込み中・エラー・見つからないときの表示はそこにまとめてある。
 
 ## 見た目
 

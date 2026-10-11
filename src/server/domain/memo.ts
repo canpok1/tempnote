@@ -2,6 +2,7 @@
 
 import { ConflictError, LimitExceededError, NotFoundError, ValidationError } from "../../shared/errors";
 import { MAX_BODY_LENGTH, MAX_MEMOS_PER_NOTEBOOK, MAX_TITLE_LENGTH } from "../../shared/limits";
+import { isId } from "./id";
 
 export type Memo = {
   id: string;
@@ -15,8 +16,6 @@ export type Memo = {
   /** 更新者のメールアドレス。取れないときは空文字 */
   updatedBy: string;
 };
-
-const ID_PATTERN = /^[0-9a-f]{32}$/;
 
 export type MemoContent = { title: string; body: string };
 
@@ -75,5 +74,5 @@ export const assertNotStale = (memo: Memo, baseUpdatedAt: unknown): void => {
 
 /** URL から来たメモ ID の形を確かめる。形が違う ID のメモは存在し得ないので、見つからない扱いにする */
 export function assertMemoId(id: unknown): asserts id is string {
-  if (typeof id !== "string" || !ID_PATTERN.test(id)) throw new NotFoundError("メモが見つかりません");
+  if (!isId(id)) throw new NotFoundError("メモが見つかりません");
 }

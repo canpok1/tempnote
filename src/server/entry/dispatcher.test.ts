@@ -33,6 +33,15 @@ describe("createDispatcher", () => {
     });
   });
 
+  it.each(["toString", "constructor", "__proto__"])("オブジェクトが元から持つ名前 %s も NOT_FOUND にする", (method) => {
+    const dispatch = createDispatcher(useCasesThat(() => created));
+
+    expect(dispatch(method, undefined)).toEqual({
+      ok: false,
+      error: { code: "NOT_FOUND", message: `unknown method: ${method}` },
+    });
+  });
+
   it("AppError のサブクラスはコードとメッセージをそのまま封筒に詰める", () => {
     const dispatch = createDispatcher(
       useCasesThat(() => {

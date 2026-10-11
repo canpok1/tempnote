@@ -41,3 +41,5 @@ export type Api = {
 };
 
 export type ApiMethod = keyof Api;
+export type ApiInput<M extends ApiMethod> = Api[M]["input"];
+export type ApiOutput<M extends ApiMethod> = Api[M]["output"];

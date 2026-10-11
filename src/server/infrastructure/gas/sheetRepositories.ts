@@ -26,6 +26,8 @@ export const createSheetRepositories = (
 ): { notebooks: NotebookRepository; memos: MemoRepository } => {
   const notebookTable = () => openTable(book(), NOTEBOOKS_SHEET, NOTEBOOK_COLUMNS);
   const memoTable = (notebookId: string) => openTable(book(), memoSheetName(notebookId), MEMO_COLUMNS);
+  // メモのシートが無いのはメモ帳が無いときだけ。読むだけ・消すだけのときはシートを作らずに済ませるため、先に確かめる
+  const memoSheet = (notebookId: string) => book().getSheetByName(memoSheetName(notebookId));
   return {
     notebooks: {
       create: (notebook) => {
@@ -45,7 +47,7 @@ export const createSheetRepositories = (
           .map((row) => row.values),
       delete: (id) => {
         // メモのシートを先に消す。途中で失敗しても notebooks の行が残るので、次の実行でまた消しにいける
-        const sheet = book().getSheetByName(memoSheetName(id));
+        const sheet = memoSheet(id);
         if (sheet) book().deleteSheet(sheet);
         const table = notebookTable();
         const row = findRow(table, id);
@@ -54,7 +56,7 @@ export const createSheetRepositories = (
     },
     memos: {
       find: (notebookId, memoId) => {
-        if (!book().getSheetByName(memoSheetName(notebookId))) return null;
+        if (!memoSheet(notebookId)) return null;
         return findRow(memoTable(notebookId), memoId)?.values ?? null;
       },
       save: (notebookId, memo) => {
@@ -64,14 +66,13 @@ export const createSheetRepositories = (
         else table.append(memo);
       },
       delete: (notebookId, memoId) => {
-        if (!book().getSheetByName(memoSheetName(notebookId))) return;
+        if (!memoSheet(notebookId)) return;
         const table = memoTable(notebookId);
         const row = findRow(table, memoId);
         if (row) table.delete(row.rowNumber);
       },
       list: (notebookId) => {
-        // シートが無いのはメモ帳が無いときだけ。呼ぶ側がメモ帳の存在を確かめているので、ここでは作らずに空とする
-        if (!book().getSheetByName(memoSheetName(notebookId))) return [];
+        if (!memoSheet(notebookId)) return [];
         return memoTable(notebookId)
           .rows()
           .map((row) => row.values);

@@ -4,17 +4,32 @@
 // 作った ID は git 管理外の .clasp.json と .deploy.json に保存する。
 
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { parseArgs } from "node:util";
 import { assertClaspLogin, build, CLASP_FILE, claspJson, DEPLOY_FILE, ROOT_DIR, run, webAppUrl } from "./lib.mjs";
 
-const args = process.argv.slice(2);
-const allowAnyone = args.includes("--allow-anyone");
-const nameIndex = args.indexOf("--name");
-// GAS の「デプロイを管理」で環境を見分けるための名前（デプロイの説明）
-const name = nameIndex >= 0 ? args[nameIndex + 1] : "development";
-const spreadsheetId = args.find((a, i) => !a.startsWith("--") && (nameIndex < 0 || i !== nameIndex + 1));
+const USAGE = "使い方: npm run setup -- <スプレッドシートID> [--name <デプロイ名>] [--allow-anyone]";
 
-if (!spreadsheetId || !name || name.startsWith("--")) {
-  console.error("使い方: npm run setup -- <スプレッドシートID> [--name <デプロイ名>] [--allow-anyone]");
+let options;
+try {
+  options = parseArgs({
+    allowPositionals: true,
+    options: {
+      // GAS の「デプロイを管理」で環境を見分けるための名前（デプロイの説明）
+      name: { type: "string", default: "development" },
+      "allow-anyone": { type: "boolean", default: false },
+    },
+  });
+} catch (e) {
+  console.error(`${e.message}\n${USAGE}`);
+  process.exit(1);
+}
+const {
+  values: { name, "allow-anyone": allowAnyone },
+  positionals: [spreadsheetId, ...extra],
+} = options;
+
+if (!spreadsheetId || extra.length > 0 || !name) {
+  console.error(USAGE);
   process.exit(1);
 }
 if (existsSync(CLASP_FILE) || existsSync(DEPLOY_FILE)) {
