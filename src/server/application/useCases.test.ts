@@ -3,6 +3,7 @@ import { ConflictError, LimitExceededError, NotFoundError, ValidationError } fro
 import { MAX_MEMOS_PER_NOTEBOOK } from "../../shared/limits";
 import type { Memo } from "../domain/memo";
 import type { Notebook } from "../domain/notebook";
+import { DEFAULT_SETTINGS, type Settings } from "../domain/settings";
 import type { Ports } from "./ports";
 import { createMaintenance, createUseCases } from "./useCases";
 
@@ -23,7 +24,7 @@ const memo: Memo = {
   updatedBy: "",
 };
 
-const setup = (initial: { notebooks?: Notebook[]; memos?: Memo[] } = {}) => {
+const setup = (initial: { notebooks?: Notebook[]; memos?: Memo[]; settings?: Partial<Settings> } = {}) => {
   const notebooks = new Map((initial.notebooks ?? []).map((n) => [n.id, n]));
   const memos = [...(initial.memos ?? [])];
   let now = new Date("2026-10-11T00:00:00.000Z");
@@ -49,6 +50,7 @@ const setup = (initial: { notebooks?: Notebook[]; memos?: Memo[] } = {}) => {
         else memos.push(m);
       },
     },
+    settings: { load: () => ({ ...DEFAULT_SETTINGS, ...initial.settings }) },
     clock: { now: () => now },
     user: { email: () => "a@example.com" },
     ids: { generate: () => String(nextId++).padStart(32, "0") },
@@ -233,6 +235,17 @@ describe("deleteExpiredNotebooks", () => {
       notebooks: [at("old", "2026-10-01T00:00:00.000Z"), at("new", "2026-10-01T00:00:00.001Z")],
     });
     setNow("2026-10-31T00:00:00.000Z");
+
+    expect(maintenance.deleteExpiredNotebooks()).toBe(1);
+    expect([...notebooks.keys()]).toEqual(["new"]);
+  });
+
+  it("設定の日数で判定する", () => {
+    const { maintenance, notebooks, setNow } = setup({
+      notebooks: [at("old", "2026-10-01T00:00:00.000Z"), at("new", "2026-10-01T00:00:00.001Z")],
+      settings: { expiryDays: 7 },
+    });
+    setNow("2026-10-08T00:00:00.000Z");
 
     expect(maintenance.deleteExpiredNotebooks()).toBe(1);
     expect([...notebooks.keys()]).toEqual(["new"]);

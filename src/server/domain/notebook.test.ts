@@ -27,11 +27,16 @@ describe("isExpired", () => {
   const notebook = newNotebook("a".repeat(32), new Date("2026-10-01T00:00:00.000Z"));
 
   it("最終アクセスから30日に1ミリ秒足りなければ期限内", () => {
-    expect(isExpired(notebook, new Date("2026-10-30T23:59:59.999Z"))).toBe(false);
+    expect(isExpired(notebook, new Date("2026-10-30T23:59:59.999Z"), 30)).toBe(false);
   });
 
   it("最終アクセスからちょうど30日で期限切れ", () => {
-    expect(isExpired(notebook, new Date("2026-10-31T00:00:00.000Z"))).toBe(true);
+    expect(isExpired(notebook, new Date("2026-10-31T00:00:00.000Z"), 30)).toBe(true);
+  });
+
+  it("日数を変えるとその日数で判定する", () => {
+    expect(isExpired(notebook, new Date("2026-10-07T23:59:59.999Z"), 7)).toBe(false);
+    expect(isExpired(notebook, new Date("2026-10-08T00:00:00.000Z"), 7)).toBe(true);
   });
 });
 
