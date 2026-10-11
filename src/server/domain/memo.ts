@@ -1,6 +1,6 @@
 // メモ。メモ帳の中に入る。
 
-import { LimitExceededError, NotFoundError, ValidationError } from "../../shared/errors";
+import { ConflictError, LimitExceededError, NotFoundError, ValidationError } from "../../shared/errors";
 import { MAX_BODY_LENGTH, MAX_MEMOS_PER_NOTEBOOK, MAX_TITLE_LENGTH } from "../../shared/limits";
 
 export type Memo = {
@@ -44,12 +44,34 @@ export const newMemo = (id: string, content: MemoContent, currentCount: number, 
   return { id, ...content, createdAt: at, updatedAt: at, updatedBy: user };
 };
 
+/**
+ * 更新日時は同時編集の検知に使うので、必ず前の値より進める。
+ * 時計の都合で同じミリ秒か過去になったときは、前の値の1ミリ秒後にする。
+ */
+const nextUpdatedAt = (previous: string, now: Date): string => {
+  const after = new Date(previous).getTime() + 1;
+  return new Date(Math.max(now.getTime(), after)).toISOString();
+};
+
 export const editMemo = (memo: Memo, content: MemoContent, now: Date, user: string): Memo => ({
   ...memo,
   ...content,
-  updatedAt: now.toISOString(),
+  updatedAt: nextUpdatedAt(memo.updatedAt, now),
   updatedBy: user,
 });
+
+/**
+ * 編集を始めたときの更新日時（base）と今の更新日時を比べ、違えば誰かが先に更新したとして ConflictError にする。
+ * 書き込みと同じロックの中で呼ぶ。
+ */
+export const assertNotStale = (memo: Memo, baseUpdatedAt: unknown): void => {
+  if (typeof baseUpdatedAt !== "string" || baseUpdatedAt === "") {
+    throw new ValidationError("編集を始めたときの更新日時が必要です");
+  }
+  if (memo.updatedAt !== baseUpdatedAt) {
+    throw new ConflictError("他の人が先にこのメモを更新しました。入力した内容を控えてから、開き直してください");
+  }
+};
 
 /** URL から来たメモ ID の形を確かめる。形が違う ID のメモは存在し得ないので、見つからない扱いにする */
 export function assertMemoId(id: unknown): asserts id is string {

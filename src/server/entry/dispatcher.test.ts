@@ -14,6 +14,7 @@ const useCasesThat = (createNotebook: UseCases["createNotebook"]): UseCases => (
   saveMemo: () => {
     throw new Error("not used");
   },
+  deleteMemo: () => null,
 });
 
 describe("createDispatcher", () => {

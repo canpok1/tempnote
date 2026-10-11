@@ -31,8 +31,13 @@ export type Api = {
   listMemos: { input: { notebookId: string }; output: MemoSummary[] };
   /** メモ帳かメモが無ければ NotFoundError */
   getMemo: { input: { notebookId: string; memoId: string }; output: Memo };
-  /** 新規作成と更新。100件を超える・文字数を超えると LimitExceededError */
+  /**
+   * 新規作成と更新。100件を超える・文字数を超えると LimitExceededError。
+   * 更新では、編集を始めた後に誰かが先に更新していたら保存せずに ConflictError
+   */
   saveMemo: { input: SaveMemoInput; output: Memo };
+  /** 編集を始めた後に誰かが先に更新していたら削除せずに ConflictError */
+  deleteMemo: { input: { notebookId: string; memoId: string; baseUpdatedAt: string }; output: null };
 };
 
 export type ApiMethod = keyof Api;

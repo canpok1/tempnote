@@ -1,6 +1,6 @@
 import type { Api } from "../../shared/api";
 import { NotFoundError } from "../../shared/errors";
-import { assertMemoId, editMemo, newMemo, validateContent } from "../domain/memo";
+import { assertMemoId, assertNotStale, editMemo, newMemo, validateContent } from "../domain/memo";
 import { assertNotebookId, type Notebook, newNotebook, touchNotebook } from "../domain/notebook";
 import type { Ports } from "./ports";
 
@@ -63,10 +63,25 @@ export const createUseCases = ({ notebooks, memos, clock, user, ids, lock }: Por
         } else {
           const current = memos.find(notebookId, memoId);
           if (!current) throw new NotFoundError("メモが見つかりません");
+          assertNotStale(current, input.baseUpdatedAt);
           memo = editMemo(current, content, now, user.email());
         }
         memos.save(notebookId, memo);
         return memo;
+      });
+    },
+
+    deleteMemo: (input: Input<"deleteMemo">): Output<"deleteMemo"> => {
+      const { notebookId, memoId } = input ?? {};
+      assertNotebookId(notebookId);
+      assertMemoId(memoId);
+      return lock.run(() => {
+        openNotebook(notebookId);
+        const current = memos.find(notebookId, memoId);
+        if (!current) throw new NotFoundError("メモが見つかりません");
+        assertNotStale(current, input.baseUpdatedAt);
+        memos.delete(notebookId, memoId);
+        return null;
       });
     },
   };

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { LimitExceededError, NotFoundError, ValidationError } from "../../shared/errors";
+import { ConflictError, LimitExceededError, NotFoundError, ValidationError } from "../../shared/errors";
 import { MAX_BODY_LENGTH, MAX_MEMOS_PER_NOTEBOOK, MAX_TITLE_LENGTH } from "../../shared/limits";
-import { assertMemoId, editMemo, newMemo, validateContent } from "./memo";
+import { assertMemoId, assertNotStale, editMemo, newMemo, validateContent } from "./memo";
 
 const now = new Date("2026-10-11T00:00:00.000Z");
 const content = { title: "買い物", body: "- 牛乳" };
@@ -55,6 +55,33 @@ describe("editMemo", () => {
       updatedAt: "2026-10-12T00:00:00.000Z",
       updatedBy: "",
     });
+  });
+});
+
+describe("editMemo の更新日時", () => {
+  it("今の時刻が前の更新日時と同じか過去でも、前の値より1ミリ秒進める", () => {
+    const memo = newMemo("m1", content, 0, now, "");
+
+    expect(editMemo(memo, content, now, "").updatedAt).toBe("2026-10-11T00:00:00.001Z");
+    expect(editMemo(memo, content, new Date("2026-10-10T00:00:00.000Z"), "").updatedAt).toBe(
+      "2026-10-11T00:00:00.001Z",
+    );
+  });
+});
+
+describe("assertNotStale", () => {
+  const memo = newMemo("m1", content, 0, now, "");
+
+  it("更新日時が編集開始時と同じなら通す", () => {
+    expect(() => assertNotStale(memo, "2026-10-11T00:00:00.000Z")).not.toThrow();
+  });
+
+  it("1ミリ秒でも違えば ConflictError", () => {
+    expect(() => assertNotStale(memo, "2026-10-11T00:00:00.001Z")).toThrow(ConflictError);
+  });
+
+  it.each([undefined, null, ""])("編集開始時の更新日時が %j なら ValidationError", (base) => {
+    expect(() => assertNotStale(memo, base)).toThrow(ValidationError);
   });
 });
 

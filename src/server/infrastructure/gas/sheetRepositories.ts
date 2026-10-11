@@ -51,6 +51,12 @@ export const createSheetRepositories = (
         if (row) table.update(row.rowNumber, memo);
         else table.append(memo);
       },
+      delete: (notebookId, memoId) => {
+        if (!book().getSheetByName(memoSheetName(notebookId))) return;
+        const table = memoTable(notebookId);
+        const row = findRow(table, memoId);
+        if (row) table.delete(row.rowNumber);
+      },
       list: (notebookId) => {
         // シートが無いのはメモ帳が無いときだけ。呼ぶ側がメモ帳の存在を確かめているので、ここでは作らずに空とする
         if (!book().getSheetByName(memoSheetName(notebookId))) return [];
