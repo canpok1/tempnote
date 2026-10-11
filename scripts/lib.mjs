@@ -6,13 +6,13 @@ import { join } from "node:path";
 export const run = (cmd, args, env = {}) =>
   execFileSync(cmd, args, { stdio: "inherit", env: { ...process.env, ...env } });
 
-/** clasp を --json 付きで実行し、出力の JSON を返す */
+/** clasp を --json 付きで実行し、出力の JSON を返す。JSON の前に出るログは読み飛ばす */
 export const claspJson = (args) => {
   const out = execFileSync("npx", ["clasp", ...args, "--json"], {
     encoding: "utf8",
     stdio: ["inherit", "pipe", "inherit"],
   });
-  return JSON.parse(out.slice(out.indexOf("{")));
+  return JSON.parse(out.slice(out.search(/^[[{]/m)));
 };
 
 export const build = (allowAnyone) => run("npm", ["run", "build"], { ALLOW_ANYONE: allowAnyone ? "true" : "false" });
@@ -24,6 +24,9 @@ export const assertClaspLogin = () => {
   console.error("clasp にログインしていません。先に `npx clasp login` を実行してください。");
   process.exit(1);
 };
+
+/** GAS が1プロジェクトに持てるバージョンの上限。デプロイのたびに1つ増える */
+export const VERSION_LIMIT = 200;
 
 export const DEPLOY_FILE = ".deploy.json";
 export const CLASP_FILE = ".clasp.json";

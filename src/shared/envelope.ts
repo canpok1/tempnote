@@ -4,9 +4,7 @@
 
 import { AppError, type ErrorCode } from "./errors";
 
-export type Envelope<T = unknown> =
-  | { ok: true; data: T }
-  | { ok: false; error: { code: ErrorCode; message: string } };
+export type Envelope<T = unknown> = { ok: true; data: T } | { ok: false; error: { code: ErrorCode; message: string } };
 
 export const unwrap = <T>(envelope: Envelope<T>): T => {
   if (envelope.ok) return envelope.data;
