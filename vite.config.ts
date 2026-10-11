@@ -39,6 +39,12 @@ const localApi = (): Plugin => ({
 export default defineConfig(({ mode }) => ({
   root: "src/client",
   plugins: [react(), mode === "gas" ? viteSingleFile() : localApi()],
+  server: {
+    // devcontainer などのコンテナ内で動かしたとき、ホストからもアクセスできるよう全インターフェースで待ち受ける
+    host: true,
+    port: 5173,
+    strictPort: true,
+  },
   build: {
     outDir: "../../dist/gas",
     emptyOutDir: false,

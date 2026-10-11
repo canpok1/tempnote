@@ -19,7 +19,7 @@ npm install
 npm run dev
 ```
 
-http://localhost:5173 を開きます。バックエンドは Vite の開発サーバーの `/api` で動き、Google には接続しません。
+http://localhost:5173 を開きます。開発サーバーは全インターフェース（0.0.0.0）で待ち受けるので、devcontainer などのコンテナ内で起動しても、ポート 5173 を転送すればホストから開けます。バックエンドは Vite の開発サーバーの `/api` で動き、Google には接続しません。
 
 ## 本番環境を作る
 
