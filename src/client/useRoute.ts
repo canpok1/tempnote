@@ -9,8 +9,9 @@ export const useRoute = () => {
   useEffect(() => {
     let active = true;
     const off = navigation.onChange((params) => setRoute(parseRoute(params)));
+    // GAS では読み終わる前に戻る・進むの通知が来ることがあるので、先に決まった画面を古い URL で上書きしない
     navigation.current().then((params) => {
-      if (active) setRoute(parseRoute(params));
+      if (active) setRoute((prev) => prev ?? parseRoute(params));
     });
     return () => {
       active = false;
