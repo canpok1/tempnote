@@ -1,9 +1,12 @@
 import type { Ports } from "../../application/ports";
 import { createMemoryRepositories, sharedMemoryStore } from "./memoryRepositories";
 
+const store = sharedMemoryStore();
+
 export const createLocalPorts = (): Ports => ({
-  ...createMemoryRepositories(sharedMemoryStore()),
-  clock: { now: () => new Date() },
+  ...createMemoryRepositories(store),
+  // E2E で30日後を試せるよう、開発用の口（entry/local.ts）から時計を進められる
+  clock: { now: () => new Date(Date.now() + store.clockOffsetMs) },
   // ローカルには Google アカウントが無いので、固定の仮ユーザーにする
   user: { email: () => "local-user@example.com" },
   ids: { generate: () => crypto.randomUUID().replace(/-/g, "") },

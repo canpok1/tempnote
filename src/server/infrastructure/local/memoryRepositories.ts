@@ -8,9 +8,11 @@ import type { Notebook } from "../../domain/notebook";
 export type MemoryStore = {
   notebooks: Map<string, Notebook>;
   memos: Map<string, Memo[]>;
+  /** 時計をどれだけ進めているか（開発用） */
+  clockOffsetMs: number;
 };
 
-export const createMemoryStore = (): MemoryStore => ({ notebooks: new Map(), memos: new Map() });
+export const createMemoryStore = (): MemoryStore => ({ notebooks: new Map(), memos: new Map(), clockOffsetMs: 0 });
 
 const GLOBAL_KEY = "__tempnoteMemoryStore";
 
@@ -39,6 +41,11 @@ export const createMemoryRepositories = (
     update: (notebook) => {
       if (!store.notebooks.has(notebook.id)) throw new Error(`notebook not found: ${notebook.id}`);
       store.notebooks.set(notebook.id, copy(notebook));
+    },
+    list: () => copy([...store.notebooks.values()]),
+    delete: (id) => {
+      store.notebooks.delete(id);
+      store.memos.delete(id);
     },
   },
   memos: {

@@ -139,5 +139,29 @@ export const describeRepositoryContract = (name: string, create: () => Repositor
 
       expect(memos.list(ID).map((m) => m.id)).toEqual(["m1"]);
     });
+
+    it("すべてのメモ帳を一覧できる", () => {
+      const { notebooks } = create();
+      notebooks.create(newNotebook(ID, new Date("2026-10-11T00:00:00.000Z")));
+      notebooks.create(newNotebook(OTHER_ID, new Date("2026-10-12T00:00:00.000Z")));
+
+      expect(notebooks.list().map((n) => n.id)).toEqual([ID, OTHER_ID]);
+    });
+
+    it("メモ帳を削除すると中のメモも消え、他のメモ帳は残る", () => {
+      const { notebooks, memos } = create();
+      notebooks.create(newNotebook(ID, new Date("2026-10-11T00:00:00.000Z")));
+      notebooks.create(newNotebook(OTHER_ID, new Date("2026-10-11T00:00:00.000Z")));
+      memos.save(ID, memo("m1", "1件目"));
+      memos.save(OTHER_ID, memo("m2", "2件目"));
+
+      notebooks.delete(ID);
+      notebooks.delete(ID);
+
+      expect(notebooks.find(ID)).toBeNull();
+      expect(memos.list(ID)).toEqual([]);
+      expect(notebooks.list().map((n) => n.id)).toEqual([OTHER_ID]);
+      expect(memos.list(OTHER_ID).map((m) => m.id)).toEqual(["m2"]);
+    });
   });
 };

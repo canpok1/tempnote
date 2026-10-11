@@ -23,6 +23,7 @@ export type SheetLike = {
 export type BookLike = {
   getSheetByName(name: string): SheetLike | null;
   insertSheet(sheetName: string): SheetLike;
+  deleteSheet(sheet: SheetLike): void;
 };
 
 /** セルはすべて書式なしテキストにする。日時や数字だけの ID が日付・数値に変換されないように */

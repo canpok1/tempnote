@@ -17,18 +17,43 @@ const readBody = async (req: IncomingMessage): Promise<unknown> => {
 
 const localEntry = resolve(import.meta.dirname, "src/server/entry/local.ts");
 
-/** 開発サーバーに /api/:method を足し、本番と同じ dispatcher をローカル実装で動かす */
+/**
+ * 開発サーバーに /api/:method を足し、本番と同じ dispatcher をローカル実装で動かす。
+ * あわせて E2E 用の /__dev/advance-clock（時計を進める）と /__dev/delete-expired（日次処理を今すぐ実行）を足す。
+ */
 const localApi = (): Plugin => ({
   name: "tempnote-local-api",
   configureServer(server) {
+    // 毎回読み込み直すので、サーバー側のコードを変えても再起動は要らない
+    const load = () => server.ssrLoadModule(localEntry);
+
     server.middlewares.use("/api", async (req, res, next) => {
       try {
         const method = (req.url ?? "").replace(/^\//, "").split("?")[0];
-        // 毎回読み込み直すので、サーバー側のコードを変えても再起動は要らない
-        const { dispatch } = await server.ssrLoadModule(localEntry);
+        const { dispatch } = await load();
         const envelope = dispatch(method, (await readBody(req)) ?? undefined);
         res.setHeader("Content-Type", "application/json");
         res.end(JSON.stringify(envelope));
+      } catch (e) {
+        next(e);
+      }
+    });
+
+    server.middlewares.use("/__dev", async (req, res, next) => {
+      try {
+        const { devTools } = await load();
+        const action = (req.url ?? "").replace(/^\//, "").split("?")[0];
+        let result: unknown = null;
+        if (action === "advance-clock") {
+          const { days } = (await readBody(req)) as { days: number };
+          devTools.advanceClock(days);
+        } else if (action === "delete-expired") {
+          result = { deleted: devTools.deleteExpiredNotebooks() };
+        } else {
+          res.statusCode = 404;
+        }
+        res.setHeader("Content-Type", "application/json");
+        res.end(JSON.stringify(result));
       } catch (e) {
         next(e);
       }

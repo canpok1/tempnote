@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { NotFoundError } from "../../shared/errors";
-import { assertNotebookId, newNotebook, touchNotebook } from "./notebook";
+import { assertNotebookId, isExpired, newNotebook, touchNotebook } from "./notebook";
 
 describe("newNotebook", () => {
   it("作成日時と最終アクセス日時を同じ時刻にする", () => {
@@ -20,6 +20,18 @@ describe("touchNotebook", () => {
       ...notebook,
       lastAccessedAt: "2026-10-12T00:00:00.000Z",
     });
+  });
+});
+
+describe("isExpired", () => {
+  const notebook = newNotebook("a".repeat(32), new Date("2026-10-01T00:00:00.000Z"));
+
+  it("最終アクセスから30日に1ミリ秒足りなければ期限内", () => {
+    expect(isExpired(notebook, new Date("2026-10-30T23:59:59.999Z"))).toBe(false);
+  });
+
+  it("最終アクセスからちょうど30日で期限切れ", () => {
+    expect(isExpired(notebook, new Date("2026-10-31T00:00:00.000Z"))).toBe(true);
   });
 });
 
