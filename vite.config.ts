@@ -19,7 +19,8 @@ const localEntry = resolve(import.meta.dirname, "src/server/entry/local.ts");
 
 /**
  * 開発サーバーに /api/:method を足し、本番と同じ dispatcher をローカル実装で動かす。
- * あわせて E2E 用の /__dev/advance-clock（時計を進める）と /__dev/delete-expired（日次処理を今すぐ実行）を足す。
+ * あわせて E2E 用の /__dev/advance-clock（時計を進める）・/__dev/delete-expired（定期の削除を今すぐ実行）・
+ * /__dev/settings（設定を書き換える）を足す。
  */
 const localApi = (): Plugin => ({
   name: "tempnote-local-api",
@@ -47,6 +48,8 @@ const localApi = (): Plugin => ({
         if (action === "advance-clock") {
           const { days } = (await readBody(req)) as { days: number };
           devTools.advanceClock(days);
+        } else if (action === "settings") {
+          devTools.setSettings((await readBody(req)) as Record<string, string | null>);
         } else if (action === "delete-expired") {
           result = { deleted: devTools.deleteExpiredNotebooks() };
         } else {

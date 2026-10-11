@@ -8,11 +8,18 @@ import type { Notebook } from "../../domain/notebook";
 export type MemoryStore = {
   notebooks: Map<string, Notebook>;
   memos: Map<string, Memo[]>;
+  /** 設定のキーと値。GAS 版の settings シートと同じく文字列で持つ（開発用の口から書き換える） */
+  settings: Record<string, string>;
   /** 時計をどれだけ進めているか（開発用） */
   clockOffsetMs: number;
 };
 
-export const createMemoryStore = (): MemoryStore => ({ notebooks: new Map(), memos: new Map(), clockOffsetMs: 0 });
+export const createMemoryStore = (): MemoryStore => ({
+  notebooks: new Map(),
+  memos: new Map(),
+  settings: {},
+  clockOffsetMs: 0,
+});
 
 const GLOBAL_KEY = "__tempnoteMemoryStore";
 

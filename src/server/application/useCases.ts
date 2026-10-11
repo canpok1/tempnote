@@ -90,17 +90,18 @@ export const createUseCases = ({ notebooks, memos, clock, user, ids, lock }: Por
 export type UseCases = ReturnType<typeof createUseCases>;
 
 /**
- * 最後に開いてから30日たったメモ帳を、中のメモごと削除する。1日1回、時間トリガーなどから呼ぶ。消した冊数を返す。
+ * 最後に開いてから設定の日数（expiryDays）がたったメモ帳を、中のメモごと削除する。時間トリガーなどから呼ぶ。消した冊数を返す。
  * 利用者を長く待たせないよう、ロックは1冊ずつ取る。取った後に読み直すので、その間に開かれたメモ帳は消さない。
  */
-export const createMaintenance = ({ notebooks, clock, lock }: Ports) => ({
+export const createMaintenance = ({ notebooks, settings, clock, lock }: Ports) => ({
   deleteExpiredNotebooks: (): number => {
+    const { expiryDays } = settings.load();
     let deleted = 0;
     for (const candidate of notebooks.list()) {
-      if (!isExpired(candidate, clock.now())) continue;
+      if (!isExpired(candidate, clock.now(), expiryDays)) continue;
       lock.run(() => {
         const current = notebooks.find(candidate.id);
-        if (!current || !isExpired(current, clock.now())) return;
+        if (!current || !isExpired(current, clock.now(), expiryDays)) return;
         notebooks.delete(current.id);
         deleted++;
       });

@@ -15,6 +15,14 @@ export const devTools = {
   advanceClock: (days: number) => {
     sharedMemoryStore().clockOffsetMs += days * 24 * 60 * 60 * 1000;
   },
-  /** GAS の時間トリガーが1日1回呼ぶ処理を今すぐ実行する */
+  /** 設定を書き換える。GAS 版で settings シートを編集するのにあたる。null の項目は消して既定値に戻す */
+  setSettings: (values: Record<string, string | null>) => {
+    const { settings } = sharedMemoryStore();
+    for (const [key, value] of Object.entries(values)) {
+      if (value === null) delete settings[key];
+      else settings[key] = value;
+    }
+  },
+  /** GAS の時間トリガーが定期的に呼ぶ処理を今すぐ実行する */
   deleteExpiredNotebooks: () => createMaintenance(ports).deleteExpiredNotebooks(),
 };

@@ -2,6 +2,7 @@
 
 import type { Memo } from "../domain/memo";
 import type { Notebook } from "../domain/notebook";
+import type { Settings } from "../domain/settings";
 
 export type NotebookRepository = {
   /** 新しいメモ帳を保存する。メモを入れる場所もここで用意する */
@@ -27,6 +28,11 @@ export type MemoRepository = {
   delete(notebookId: string, memoId: string): void;
 };
 
+export type SettingsRepository = {
+  /** 現在の設定。書かれていない・読めない項目は既定値になる */
+  load(): Settings;
+};
+
 export type Clock = { now(): Date };
 
 export type CurrentUser = {
@@ -45,6 +51,7 @@ export type Lock = { run<T>(task: () => T): T };
 export type Ports = {
   notebooks: NotebookRepository;
   memos: MemoRepository;
+  settings: SettingsRepository;
   clock: Clock;
   user: CurrentUser;
   ids: IdGenerator;
