@@ -21,6 +21,18 @@ npm run dev
 
 http://localhost:5173 を開きます。開発サーバーは全インターフェース（0.0.0.0）で待ち受けるので、devcontainer などのコンテナ内で起動しても、ポート 5173 を転送すればホストから開けます。バックエンドは Vite の開発サーバーの `/api` で動き、Google には接続しません。
 
+## 検査する
+
+| コマンド | 内容 |
+| --- | --- |
+| `npm run check` | 型チェック・lint・ユニットテスト・ビルドをまとめて実行する。push 前に流す |
+| `npm run typecheck` | TypeScript の型チェック |
+| `npm run lint` | Biome で lint とフォーマットを確認する。直すときは `npm run format` |
+| `npm test` | Vitest のユニットテスト（`src/**/*.test.ts`）。`npm run test:watch` で監視しながら実行 |
+| `npm run test:e2e` | Playwright の E2E テスト（`e2e/`）。開発サーバーを立ち上げてブラウザで画面を確かめる。初回は `npx playwright install chromium` が要る |
+
+プルリクエストを作ると、GitHub Actions がこれらをすべて実行します（`.github/workflows/ci.yml`）。デプロイの前にも同じ検査を通し、失敗したらデプロイしません。
+
 ## 本番環境を作る
 
 1. 空のスプレッドシートを作り、URL の `/d/` と `/edit` の間にある ID を控える
@@ -61,6 +73,10 @@ npm run deploy
 | `CLASPRC_JSON` | シークレット | `~/.clasprc.json` の中身 |
 | `ALLOW_ANYONE` | 変数（任意） | `true` のときだけ、Google アカウントを持つ全員に公開する |
 
+### GAS のバージョン数
+
+デプロイのたびに GAS のバージョンが1つ増え、1つのプロジェクトに作れるのは 200 個までです。バージョンは API から削除できないため、`npm run deploy` は残りが 20 個以下になると警告を出します（GitHub Actions ではジョブの警告として表示）。警告が出たら、GAS エディタの「プロジェクト履歴」から古いバージョンを削除してください。デプロイ中のバージョンは削除できません。
+
 ## 構成
 
 ```
@@ -74,7 +90,10 @@ src/
       gas/         GAS 版の実装（SpreadsheetApp・Session など）
       local/       ローカル版の実装
     entry/         入口。GAS の doGet / api と、ローカルの /api が同じ dispatcher を呼ぶ
+e2e/               Playwright の E2E テスト。ローカルの開発サーバーに対して動かす
 scripts/           setup・deploy・マニフェスト生成
 ```
+
+ユニットテストは対象のファイルの隣に `*.test.ts` として置きます。
 
 アプリのコードは例外でエラーを扱います。`google.script.run` は例外のクラスを運べないため、通信の区間だけ `{ ok, data | error }` の封筒に詰め替えます（`src/shared/envelope.ts`）。

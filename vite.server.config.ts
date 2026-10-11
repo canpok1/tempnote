@@ -5,7 +5,9 @@
 import { defineConfig } from "vite";
 
 const exposed = ["doGet", "api"];
-const footer = exposed.map((name) => `function ${name}() { return _tempnote.${name}.apply(this, arguments); }`).join("\n");
+const footer = exposed
+  .map((name) => `function ${name}() { return _tempnote.${name}.apply(this, arguments); }`)
+  .join("\n");
 
 export default defineConfig({
   build: {

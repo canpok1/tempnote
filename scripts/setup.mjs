@@ -18,14 +18,24 @@ if (!spreadsheetId || !name || name.startsWith("--")) {
   process.exit(1);
 }
 if (existsSync(CLASP_FILE) || existsSync(DEPLOY_FILE)) {
-  console.error(`${CLASP_FILE} か ${DEPLOY_FILE} が既にあります。構築済みならデプロイは \`npm run deploy\` を使ってください。`);
+  console.error(
+    `${CLASP_FILE} か ${DEPLOY_FILE} が既にあります。構築済みならデプロイは \`npm run deploy\` を使ってください。`,
+  );
   process.exit(1);
 }
 assertClaspLogin();
 
 console.log("\n== GAS プロジェクトを作成（スプレッドシートに紐づけ） ==");
 mkdirSync(ROOT_DIR, { recursive: true });
-const { scriptId } = claspJson(["create-script", "--parentId", spreadsheetId, "--title", "tempnote", "--rootDir", ROOT_DIR]);
+const { scriptId } = claspJson([
+  "create-script",
+  "--parentId",
+  spreadsheetId,
+  "--title",
+  "tempnote",
+  "--rootDir",
+  ROOT_DIR,
+]);
 
 console.log("\n== ビルド ==");
 build(allowAnyone);
