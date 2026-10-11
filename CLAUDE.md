@@ -33,7 +33,7 @@
 - サーバー側のコードは GAS の V8 で動く。`src/server/entry/gas.ts` から辿れるコード（`shared/`・domain・application を含む）で Node の API を使わない
 - GAS から呼べるのは直下の関数だけ。`doGet`・`api` 以外の入口（時間トリガーの関数など）を足すときは、`src/server/entry/gas.ts` で export したうえで `vite.server.config.ts` の `exposed` にも足す
 - 画面は iframe の中で動くため、`location` / `history` を直接触っても利用者の URL は変わらない。URL の読み書きは `src/client/navigation/` を通す。iframe の外へ出る `<a href>` は使わず、画面の移動はボタンで行う
-- `appsscript.json` は `scripts/write-manifest.mjs` が生成する。公開範囲などを変えるときはそちらを直す。新しい GAS のサービス（トリガーなど）を使うと必要な権限が増え、デプロイ後に各環境で再承認が要る
+- `appsscript.json` は `scripts/write-manifest.mjs` が生成する。公開範囲などを変えるときはそちらを直す。新しい GAS のサービス（トリガーなど）を使うと必要な権限が増え、デプロイ後に各環境で再承認が要る（URL を開くだけでは承認画面が出ないので、エディタで関数を一度実行して承認する）
 
 ## 環境ごとの値
 
