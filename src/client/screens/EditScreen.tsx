@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useDeferredValue, useState } from "react";
 import type { Memo } from "../../shared/api";
 import { ConflictError, NotFoundError } from "../../shared/errors";
 import { MAX_BODY_LENGTH, MAX_TITLE_LENGTH } from "../../shared/limits";
+import { MarkdownView } from "../MarkdownView";
 import { callApi } from "../transport";
 import { errorMessage, useApi } from "../useApi";
 import type { Navigate } from "../useRoute";
@@ -30,6 +31,8 @@ const LoadAndEdit = ({ notebookId, memoId, navigate }: Props & { memoId: string 
 const Editor = ({ notebookId, memo, navigate }: { notebookId: string; memo?: Memo; navigate: Navigate }) => {
   const [title, setTitle] = useState(memo?.title ?? "");
   const [body, setBody] = useState(memo?.body ?? "");
+  // 長い本文でも入力が引っかからないよう、プレビューの描き直しは入力より後回しにする
+  const previewBody = useDeferredValue(body);
   const [saving, setSaving] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -93,17 +96,23 @@ const Editor = ({ notebookId, memo, navigate }: { notebookId: string; memo?: Mem
             <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={MAX_TITLE_LENGTH} />
           </label>
         </p>
-        <p>
-          <label>
-            本文（Markdown）
+        <div className="editor">
+          <p>
+            <label>
+              本文（Markdown）
+              <br />
+              <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={16} />
+            </label>
             <br />
-            <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={16} />
-          </label>
-          <br />
-          <small>
-            {body.length.toLocaleString()} / {MAX_BODY_LENGTH.toLocaleString()} 文字
-          </small>
-        </p>
+            <small>
+              {body.length.toLocaleString()} / {MAX_BODY_LENGTH.toLocaleString()} 文字
+            </small>
+          </p>
+          <div className="preview">
+            プレビュー
+            <MarkdownView markdown={previewBody} label="プレビュー" />
+          </div>
+        </div>
         {error && (
           <div role="alert">
             <p>{conflicted ? error : `保存できませんでした: ${error}`}</p>

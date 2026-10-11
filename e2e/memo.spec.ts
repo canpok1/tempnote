@@ -35,6 +35,22 @@ test("メモを作って保存すると閲覧画面で Markdown が表示され�
   await expect(page.getByRole("list", { name: "メモの一覧" }).getByRole("button")).toHaveText(["買い物リスト"]);
 });
 
+test("編集中は入力に合わせてプレビューが変わり、保存するまでメモは変わらない", async ({ page }) => {
+  await createNotebook(page);
+
+  await page.getByRole("button", { name: "新規メモ" }).click();
+  const preview = page.getByRole("article", { name: "プレビュー" });
+  await page.getByLabel("本文（Markdown）").fill("# 見出し\n\n- 牛乳");
+  await expect(preview.getByRole("heading", { name: "見出し" })).toBeVisible();
+  await expect(preview.getByRole("listitem")).toHaveText(["牛乳"]);
+
+  await page.getByLabel("本文（Markdown）").fill("## 書き換え");
+  await expect(preview.getByRole("heading", { name: "書き換え" })).toBeVisible();
+
+  await page.getByRole("button", { name: "キャンセル" }).click();
+  await expect(page.getByText("メモはまだありません。")).toBeVisible();
+});
+
 test("保存した後の戻るでは編集画面に戻らない", async ({ page }) => {
   const notebookId = await createNotebook(page);
 
