@@ -2,7 +2,14 @@
 
 使わなくなったら勝手に消えるメモ帳です。スプレッドシートを DB、Google Apps Script（GAS）をバックエンドにしています。
 
-今は基盤だけで、画面にはバックエンドから取得した情報（動いている環境・データの置き場所・利用者・サーバー時刻）を表示します。
+今は基盤と画面の切り替えだけです。URL のパラメータに応じてトップ・メモ帳・メモ閲覧・メモ編集の4画面を出し分けますが、メモ帳とメモの中身はまだありません。トップにはバックエンドから取得した情報（動いている環境・データの置き場所・利用者・サーバー時刻）を表示します。
+
+| URL | 画面 |
+| --- | --- |
+| `?`（パラメータ無し） | トップ |
+| `?id=<メモ帳ID>` | メモ帳 |
+| `?id=<メモ帳ID>&memo=<メモID>` | メモ閲覧 |
+| `?id=<メモ帳ID>&memo=<メモID>&mode=edit` | メモ編集（`memo` が無ければ新規メモ） |
 
 ## 必要なもの
 
@@ -83,8 +90,11 @@ npm run deploy
 src/
   shared/          フロントとサーバーで共有する型（API の定義・例外・通信用の封筒）
   client/          React の画面
+    screens/       画面ごとのコンポーネント。どれを出すかは route.ts が URL のパラメータから決める
     transport/     サーバー呼び出し。本番は google.script.run、ローカルは fetch
+    navigation/    URL のパラメータと履歴。本番は google.script.url / history、ローカルは location / history
   server/
+    domain/        メモ帳・メモとそのルール（これから作る）
     application/   ユースケースと、インフラ層に求めるインターフェース（ports）
     infrastructure/
       gas/         GAS 版の実装（SpreadsheetApp・Session など）
@@ -96,4 +106,19 @@ scripts/           setup・deploy・マニフェスト生成
 
 ユニットテストは対象のファイルの隣に `*.test.ts` として置きます。
 
-アプリのコードは例外でエラーを扱います。`google.script.run` は例外のクラスを運べないため、通信の区間だけ `{ ok, data | error }` の封筒に詰め替えます（`src/shared/envelope.ts`）。
+アプリのコードは例外でエラーを扱います。`AppError` のサブクラス（`ConflictError` / `NotFoundError` / `LimitExceededError` / `ValidationError`）をサーバーで throw すると、画面で同じクラスとして catch できます（`src/shared/errors.ts`）。`google.script.run` は例外のクラスを運べないため、通信の区間だけ `{ ok, data | error }` の封筒に詰め替え、受け取った側でコードから同じクラスに戻します（`src/shared/envelope.ts`）。
+
+GAS の画面は iframe の中で動くため、`location` や `history` を直接触っても利用者が見ている URL は変わりません。画面は URL を `src/client/navigation/` だけを通して読み書きします。iframe の外へ出るリンク（`<a href>`）も使えないので、画面の移動はボタンで行います。
+
+### 層の依存の向き
+
+層をまたぐ import は Biome の `noRestrictedImports` で縛っています（`biome.json` の `overrides`）。違反すると `npm run lint` が失敗します。
+
+| 場所 | import してはいけないもの |
+| --- | --- |
+| `shared/` | `client/`・`server/` |
+| `client/` | `server/` |
+| `server/domain/` | ほかのすべての層（`shared/` だけ使える） |
+| `server/application/` | `infrastructure/`・`entry/` |
+| `server/infrastructure/gas/` と `entry/gas.ts` | ローカル用の実装、`entry/` |
+| `server/infrastructure/local/` と `entry/local.ts` | GAS 用の実装、`entry/` |
