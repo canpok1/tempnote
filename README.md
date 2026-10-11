@@ -50,7 +50,7 @@ http://localhost:5173 を開きます。開発サーバーは全インターフ�
 npm run deploy
 ```
 
-自動デプロイ: GitHub Actions が、main への push で `trial` 環境へ、`v` から始まるタグの push で `production` 環境へデプロイします。リポジトリの Settings > Environments で環境を作り、次を登録してください。登録していない環境へのデプロイは飛ばされます。
+自動デプロイ: GitHub Actions が、main への push で `staging` 環境へ、`v` から始まるタグの push で `production` 環境へデプロイします。リポジトリの Settings > Environments で環境を作り、次を登録してください。登録していない環境へのデプロイは飛ばされます。
 
 | 名前 | 種類 | 内容 |
 | --- | --- | --- |
