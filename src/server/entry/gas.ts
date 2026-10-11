@@ -5,6 +5,9 @@ import { CLEANUP_HANDLER, ensureCleanupTrigger } from "../infrastructure/gas/cle
 import { createGasPorts } from "../infrastructure/gas/gasPorts";
 import { createDispatcher } from "./dispatcher";
 
+/** ビルド時に vite.server.config.ts が埋め込む */
+declare const __FAVICON_URL__: string;
+
 const ports = createGasPorts();
 const dispatch = createDispatcher(createUseCases(ports));
 const maintenance = createMaintenance(ports);
@@ -25,6 +28,7 @@ export const doGet = () => {
   prepareCleanup();
   return HtmlService.createHtmlOutputFromFile("index")
     .setTitle("tempnote")
+    .setFaviconUrl(__FAVICON_URL__)
     .addMetaTag("viewport", "width=device-width, initial-scale=1");
 };
 
