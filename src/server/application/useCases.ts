@@ -1,7 +1,7 @@
 import type { Api } from "../../shared/api";
 import { NotFoundError } from "../../shared/errors";
 import { assertMemoId, assertNotStale, editMemo, newMemo, validateContent } from "../domain/memo";
-import { assertNotebookId, type Notebook, newNotebook, touchNotebook } from "../domain/notebook";
+import { assertNotebookId, isExpired, type Notebook, newNotebook, touchNotebook } from "../domain/notebook";
 import type { Ports } from "./ports";
 
 type Input<M extends keyof Api> = Api[M]["input"];
@@ -88,3 +88,23 @@ export const createUseCases = ({ notebooks, memos, clock, user, ids, lock }: Por
 };
 
 export type UseCases = ReturnType<typeof createUseCases>;
+
+/**
+ * 最後に開いてから30日たったメモ帳を、中のメモごと削除する。1日1回、時間トリガーなどから呼ぶ。消した冊数を返す。
+ * 利用者を長く待たせないよう、ロックは1冊ずつ取る。取った後に読み直すので、その間に開かれたメモ帳は消さない。
+ */
+export const createMaintenance = ({ notebooks, clock, lock }: Ports) => ({
+  deleteExpiredNotebooks: (): number => {
+    let deleted = 0;
+    for (const candidate of notebooks.list()) {
+      if (!isExpired(candidate, clock.now())) continue;
+      lock.run(() => {
+        const current = notebooks.find(candidate.id);
+        if (!current || !isExpired(current, clock.now())) return;
+        notebooks.delete(current.id);
+        deleted++;
+      });
+    }
+    return deleted;
+  },
+});

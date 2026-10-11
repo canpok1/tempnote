@@ -10,6 +10,10 @@ export type NotebookRepository = {
   find(id: string): Notebook | null;
   /** 既存のメモ帳を上書きする */
   update(notebook: Notebook): void;
+  /** すべてのメモ帳 */
+  list(): Notebook[];
+  /** メモ帳を中のメモごと削除する。無ければ何もしない */
+  delete(id: string): void;
 };
 
 export type MemoRepository = {

@@ -75,4 +75,15 @@ describe("createSheetRepositories のシートの形", () => {
     expect(sheet.cells[0]).toEqual(["id", "createdAt", "lastAccessedAt"]);
     expect(notebooks.find(ID)?.lastAccessedAt).toBe("2026-10-11T00:00:00.000Z");
   });
+
+  it("メモ帳を削除すると nb_<ID> シートと notebooks の行が消える", () => {
+    const book = new FakeBook();
+    const { notebooks } = createSheetRepositories(() => book);
+    notebooks.create(newNotebook(ID, new Date("2026-10-11T00:00:00.000Z")));
+
+    notebooks.delete(ID);
+
+    expect([...book.sheets.keys()]).toEqual(["notebooks"]);
+    expect(book.sheets.get("notebooks")?.cells).toEqual([["id", "createdAt", "lastAccessedAt"]]);
+  });
 });

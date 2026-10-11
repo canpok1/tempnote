@@ -8,6 +8,9 @@ const isCI = !!process.env.CI;
 export default defineConfig({
   testDir: "e2e",
   forbidOnly: isCI,
+  // 開発サーバーのデータと時計は全テストで共有する。時計を進めるテスト（expiry.spec.ts）が他のテストのメモ帳を
+  // 消してしまわないよう、並列にしない
+  workers: 1,
   retries: isCI ? 1 : 0,
   reporter: isCI ? [["list"], ["html", { open: "never" }]] : "list",
   use: {

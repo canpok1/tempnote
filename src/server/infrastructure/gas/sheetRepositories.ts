@@ -39,6 +39,18 @@ export const createSheetRepositories = (
         if (!row) throw new Error(`notebook not found: ${notebook.id}`);
         table.update(row.rowNumber, notebook);
       },
+      list: () =>
+        notebookTable()
+          .rows()
+          .map((row) => row.values),
+      delete: (id) => {
+        // メモのシートを先に消す。途中で失敗しても notebooks の行が残るので、次の実行でまた消しにいける
+        const sheet = book().getSheetByName(memoSheetName(id));
+        if (sheet) book().deleteSheet(sheet);
+        const table = notebookTable();
+        const row = findRow(table, id);
+        if (row) table.delete(row.rowNumber);
+      },
     },
     memos: {
       find: (notebookId, memoId) => {

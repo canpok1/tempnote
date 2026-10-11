@@ -109,4 +109,9 @@ export class FakeBook implements BookLike {
     this.sheets.set(sheetName, sheet);
     return sheet;
   }
+
+  deleteSheet(sheet: SheetLike) {
+    if (this.sheets.size <= 1) throw new Error("最後のシートは削除できません");
+    for (const [name, s] of this.sheets) if (s === sheet) this.sheets.delete(name);
+  }
 }

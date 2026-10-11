@@ -4,7 +4,7 @@ import { MAX_MEMOS_PER_NOTEBOOK } from "../../shared/limits";
 import type { Memo } from "../domain/memo";
 import type { Notebook } from "../domain/notebook";
 import type { Ports } from "./ports";
-import { createUseCases } from "./useCases";
+import { createMaintenance, createUseCases } from "./useCases";
 
 const NB = "0123456789abcdef0123456789abcdef";
 const MEMO = "fedcba9876543210fedcba9876543210";
@@ -33,6 +33,8 @@ const setup = (initial: { notebooks?: Notebook[]; memos?: Memo[] } = {}) => {
       create: (n) => notebooks.set(n.id, n),
       find: (id) => notebooks.get(id) ?? null,
       update: (n) => notebooks.set(n.id, n),
+      list: () => [...notebooks.values()],
+      delete: (id) => notebooks.delete(id),
     },
     memos: {
       list: () => memos,
@@ -54,6 +56,7 @@ const setup = (initial: { notebooks?: Notebook[]; memos?: Memo[] } = {}) => {
   };
   return {
     useCases: createUseCases(ports),
+    maintenance: createMaintenance(ports),
     ports,
     notebooks,
     memos,
@@ -219,5 +222,31 @@ describe("deleteMemo", () => {
     const { useCases } = setup({ notebooks: [notebook] });
 
     expect(() => useCases.deleteMemo({ notebookId: NB, memoId: MEMO, baseUpdatedAt: "x" })).toThrow(NotFoundError);
+  });
+});
+
+describe("deleteExpiredNotebooks", () => {
+  const at = (id: string, lastAccessedAt: string): Notebook => ({ id, createdAt: lastAccessedAt, lastAccessedAt });
+
+  it("最終アクセスから30日たったメモ帳だけを消し、消した冊数を返す", () => {
+    const { maintenance, notebooks, setNow } = setup({
+      notebooks: [at("old", "2026-10-01T00:00:00.000Z"), at("new", "2026-10-01T00:00:00.001Z")],
+    });
+    setNow("2026-10-31T00:00:00.000Z");
+
+    expect(maintenance.deleteExpiredNotebooks()).toBe(1);
+    expect([...notebooks.keys()]).toEqual(["new"]);
+  });
+
+  it("ロックを取った後に読み直し、その間に開かれたメモ帳は消さない", () => {
+    const { maintenance, notebooks, ports, setNow } = setup({ notebooks: [at("nb", "2026-10-01T00:00:00.000Z")] });
+    setNow("2026-10-31T00:00:00.000Z");
+    vi.mocked(ports.lock.run).mockImplementationOnce((task) => {
+      notebooks.set("nb", at("nb", "2026-10-30T00:00:00.000Z"));
+      return task();
+    });
+
+    expect(maintenance.deleteExpiredNotebooks()).toBe(0);
+    expect(notebooks.has("nb")).toBe(true);
   });
 });

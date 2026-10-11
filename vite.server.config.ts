@@ -4,7 +4,7 @@
 
 import { defineConfig } from "vite";
 
-const exposed = ["doGet", "api"];
+const exposed = ["doGet", "api", "deleteExpiredNotebooks"];
 const footer = exposed
   .map((name) => `function ${name}() { return _tempnote.${name}.apply(this, arguments); }`)
   .join("\n");
