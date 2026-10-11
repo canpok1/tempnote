@@ -32,9 +32,11 @@ const Header = ({ route, navigate }: { route: Route | null; navigate: Navigate }
     <nav>
       <ul>
         <li>
-          <button type="button" className="brand" onClick={() => navigate({ screen: "top" })}>
-            tempnote
-          </button>
+          <h1>
+            <button type="button" className="brand" onClick={() => navigate({ screen: "top" })}>
+              tempnote
+            </button>
+          </h1>
         </li>
       </ul>
       {route && route.screen !== "top" && (

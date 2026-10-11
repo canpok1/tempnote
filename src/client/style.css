@@ -1,7 +1,16 @@
 /* 見た目の土台は Pico CSS（main.tsx で読み込む）。ここには Pico で足りない分だけを書く */
 
+/* 本文の幅。編集画面だけは入力欄とプレビューを並べるので広げ、上部のバーもそれに揃える */
+:root {
+  --content-width: 48rem;
+}
+
+:root:has(.editor) {
+  --content-width: 80rem;
+}
+
 main {
-  max-width: 48rem;
+  max-width: var(--content-width);
   margin: 0 auto;
   padding: 1.5rem 1rem;
 }
@@ -12,14 +21,9 @@ main {
 }
 
 .app-bar nav {
-  max-width: 48rem;
+  max-width: var(--content-width);
   margin: 0 auto;
   padding: 0 1rem;
-}
-
-main:has(.editor),
-.app-bar:has(+ main .editor) nav {
-  max-width: 80rem;
 }
 
 .app-bar button,
@@ -30,6 +34,11 @@ main:has(.editor),
   background: none;
   color: var(--pico-primary);
   text-align: left;
+}
+
+.app-bar h1 {
+  margin: 0;
+  font-size: 1rem;
 }
 
 .app-bar .brand {
@@ -120,15 +129,20 @@ small {
   margin-left: auto;
 }
 
-button.danger {
+/* Pico はホバー・フォーカス時に色を差し替えるので、その状態でも赤のままにする。
+   状態の並びは Pico と同じにして、詳細度で Pico に負けないようにしている */
+button.danger,
+button.danger:is([aria-current]:not([aria-current="false"]), :hover, :active, :focus) {
   --pico-background-color: var(--pico-del-color);
   --pico-border-color: var(--pico-del-color);
   /* 明るい配色では白、暗い配色では黒になり、どちらでも赤の上で読める */
   --pico-color: var(--pico-contrast-inverse);
 }
 
-button.outline.danger {
+button.outline.danger,
+button.outline.danger:is([aria-current]:not([aria-current="false"]), :hover, :active, :focus) {
   --pico-background-color: transparent;
+  --pico-border-color: var(--pico-del-color);
   --pico-color: var(--pico-del-color);
 }
 
