@@ -75,3 +75,44 @@ test("存在しないメモは「見つかりません」と出す", async ({ pa
 
   await expect(page.getByRole("heading", { name: "メモが見つかりません" })).toBeVisible();
 });
+
+test("2つの画面で同じメモを編集すると、後から保存した方に警告が出て入力が残る", async ({ page, context }) => {
+  await createNotebook(page);
+  await page.getByRole("button", { name: "新規メモ" }).click();
+  await writeMemo(page, "共有メモ", "最初");
+  await expect(page.getByRole("heading", { name: "共有メモ" })).toBeVisible();
+  const memoUrl = page.url();
+
+  const other = await context.newPage();
+  await other.goto(memoUrl);
+  await other.getByRole("button", { name: "編集" }).click();
+  await page.getByRole("button", { name: "編集" }).click();
+  await expect(page.getByLabel("タイトル")).toHaveValue("共有メモ");
+  await expect(other.getByLabel("タイトル")).toHaveValue("共有メモ");
+
+  await writeMemo(page, "共有メモ", "先に保存");
+  await expect(page.locator("article")).toHaveText("先に保存");
+
+  await writeMemo(other, "共有メモ", "後から保存");
+  await expect(other.getByRole("alert")).toContainText("他の人が先にこのメモを更新しました");
+  await expect(other.getByLabel("本文（Markdown）")).toHaveValue("後から保存");
+  await expect(other.getByRole("button", { name: "保存" })).toBeDisabled();
+
+  await other.getByRole("button", { name: "入力を捨てて最新のメモを開く" }).click();
+  await expect(other.locator("article")).toHaveText("先に保存");
+});
+
+test("編集画面からメモを削除すると、確認の後に一覧から消える", async ({ page }) => {
+  const notebookId = await createNotebook(page);
+  await page.getByRole("button", { name: "新規メモ" }).click();
+  await writeMemo(page, "消すメモ", "本文");
+  await page.getByRole("button", { name: "編集" }).click();
+
+  await page.getByRole("button", { name: "削除" }).click();
+  await page.getByRole("button", { name: "やめる" }).click();
+  await page.getByRole("button", { name: "削除" }).click();
+  await page.getByRole("button", { name: "削除する" }).click();
+
+  await expect(page).toHaveURL(`/?id=${notebookId}`);
+  await expect(page.getByText("メモはまだありません。")).toBeVisible();
+});

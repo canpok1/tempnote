@@ -11,6 +11,7 @@ const routes = (useCases: UseCases): Record<ApiMethod, (input: unknown) => unkno
   listMemos: (input) => useCases.listMemos(input as Api["listMemos"]["input"]),
   getMemo: (input) => useCases.getMemo(input as Api["getMemo"]["input"]),
   saveMemo: (input) => useCases.saveMemo(input as Api["saveMemo"]["input"]),
+  deleteMemo: (input) => useCases.deleteMemo(input as Api["deleteMemo"]["input"]),
 });
 
 export const createDispatcher = (useCases: UseCases) => {

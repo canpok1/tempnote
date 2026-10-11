@@ -104,5 +104,40 @@ export const describeRepositoryContract = (name: string, create: () => Repositor
       expect(memos.find(OTHER_ID, "m1")).toBeNull();
       expect(memos.find(ID, "m9")).toBeNull();
     });
+
+    it("削除したメモは一覧からも ID でも消え、他のメモは並びを保って残る", () => {
+      const { notebooks, memos } = create();
+      notebooks.create(newNotebook(ID, new Date("2026-10-11T00:00:00.000Z")));
+      memos.save(ID, memo("m1", "1件目"));
+      memos.save(ID, memo("m2", "2件目"));
+      memos.save(ID, memo("m3", "3件目"));
+
+      memos.delete(ID, "m2");
+
+      expect(memos.list(ID).map((m) => m.id)).toEqual(["m1", "m3"]);
+      expect(memos.find(ID, "m2")).toBeNull();
+    });
+
+    it("最後の1件も削除でき、その後また保存できる", () => {
+      const { notebooks, memos } = create();
+      notebooks.create(newNotebook(ID, new Date("2026-10-11T00:00:00.000Z")));
+      memos.save(ID, memo("m1", "1件目"));
+
+      memos.delete(ID, "m1");
+      memos.save(ID, memo("m2", "2件目"));
+
+      expect(memos.list(ID).map((m) => m.id)).toEqual(["m2"]);
+    });
+
+    it("無いメモの削除は何もしない", () => {
+      const { notebooks, memos } = create();
+      notebooks.create(newNotebook(ID, new Date("2026-10-11T00:00:00.000Z")));
+      memos.save(ID, memo("m1", "1件目"));
+
+      memos.delete(ID, "m9");
+      memos.delete(OTHER_ID, "m1");
+
+      expect(memos.list(ID).map((m) => m.id)).toEqual(["m1"]);
+    });
   });
 };

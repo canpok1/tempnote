@@ -54,5 +54,13 @@ export const createMemoryRepositories = (
       else list.push(copy(memo));
       store.memos.set(notebookId, list);
     },
+    delete: (notebookId, memoId) => {
+      const list = store.memos.get(notebookId);
+      if (list)
+        store.memos.set(
+          notebookId,
+          list.filter((m) => m.id !== memoId),
+        );
+    },
   },
 });

@@ -34,6 +34,8 @@ export type Table<C extends string> = {
   append(values: Record<C, string>): void;
   /** 指定した行の、この表が知っている列だけを書き換える。知らない列はそのまま残す */
   update(rowNumber: number, values: Record<C, string>): void;
+  /** 指定した行を削除し、下の行を詰める */
+  delete(rowNumber: number): void;
 };
 
 const toText = (cell: unknown): string => (cell instanceof Date ? cell.toISOString() : String(cell ?? ""));
@@ -92,5 +94,7 @@ export const openTable = <C extends string>(book: BookLike, name: string, column
       for (const c of columns) cells[indexOf(c)] = values[c];
       range.setNumberFormat(TEXT).setValues([cells]);
     },
+    // ヘッダー行は残るので、最後のデータ行を消しても「すべての行は削除できない」制約には当たらない
+    delete: (rowNumber) => target.deleteRows(rowNumber, 1),
   };
 };

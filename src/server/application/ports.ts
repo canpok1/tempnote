@@ -19,6 +19,8 @@ export type MemoRepository = {
   find(notebookId: string, memoId: string): Memo | null;
   /** 同じ ID のメモがあれば上書きし、無ければ末尾に足す */
   save(notebookId: string, memo: Memo): void;
+  /** 無ければ何もしない */
+  delete(notebookId: string, memoId: string): void;
 };
 
 export type Clock = { now(): Date };

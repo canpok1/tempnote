@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { LimitExceededError, NotFoundError, ValidationError } from "../../shared/errors";
+import { ConflictError, LimitExceededError, NotFoundError, ValidationError } from "../../shared/errors";
 import { MAX_MEMOS_PER_NOTEBOOK } from "../../shared/limits";
 import type { Memo } from "../domain/memo";
 import type { Notebook } from "../domain/notebook";
@@ -37,6 +37,10 @@ const setup = (initial: { notebooks?: Notebook[]; memos?: Memo[] } = {}) => {
     memos: {
       list: () => memos,
       find: (_, id) => memos.find((m) => m.id === id) ?? null,
+      delete: (_, id) => {
+        const i = memos.findIndex((x) => x.id === id);
+        if (i >= 0) memos.splice(i, 1);
+      },
       save: (_, m) => {
         const i = memos.findIndex((x) => x.id === m.id);
         if (i >= 0) memos[i] = m;
@@ -150,11 +154,26 @@ describe("saveMemo", () => {
   it("memoId があれば既存のメモを書き換える", () => {
     const { useCases, memos } = setup({ notebooks: [notebook], memos: [memo] });
 
-    useCases.saveMemo({ notebookId: NB, memoId: MEMO, title: "t", body: "b" });
+    useCases.saveMemo({ notebookId: NB, memoId: MEMO, title: "t", body: "b", baseUpdatedAt: memo.updatedAt });
 
     expect(memos).toEqual([
       { ...memo, title: "t", body: "b", updatedAt: "2026-10-11T00:00:00.000Z", updatedBy: "a@example.com" },
     ]);
+  });
+
+  it("編集を始めた後に誰かが更新していたら保存せずに ConflictError", () => {
+    const { useCases, memos } = setup({ notebooks: [notebook], memos: [memo] });
+
+    expect(() =>
+      useCases.saveMemo({
+        notebookId: NB,
+        memoId: MEMO,
+        title: "t",
+        body: "b",
+        baseUpdatedAt: "2026-10-01T00:00:00.000Z",
+      }),
+    ).toThrow(ConflictError);
+    expect(memos).toEqual([memo]);
   });
 
   it("100件あるメモ帳には新しいメモを作れない", () => {
@@ -175,5 +194,30 @@ describe("saveMemo", () => {
 
     expect(() => useCases.saveMemo({ notebookId: NB, title: "t" } as never)).toThrow(ValidationError);
     expect(ports.lock.run).not.toHaveBeenCalled();
+  });
+});
+
+describe("deleteMemo", () => {
+  it("メモを削除する", () => {
+    const { useCases, memos } = setup({ notebooks: [notebook], memos: [memo] });
+
+    useCases.deleteMemo({ notebookId: NB, memoId: MEMO, baseUpdatedAt: memo.updatedAt });
+
+    expect(memos).toEqual([]);
+  });
+
+  it("編集を始めた後に誰かが更新していたら削除せずに ConflictError", () => {
+    const { useCases, memos } = setup({ notebooks: [notebook], memos: [memo] });
+
+    expect(() =>
+      useCases.deleteMemo({ notebookId: NB, memoId: MEMO, baseUpdatedAt: "2026-10-01T00:00:00.000Z" }),
+    ).toThrow(ConflictError);
+    expect(memos).toEqual([memo]);
+  });
+
+  it("無いメモは NotFoundError", () => {
+    const { useCases } = setup({ notebooks: [notebook] });
+
+    expect(() => useCases.deleteMemo({ notebookId: NB, memoId: MEMO, baseUpdatedAt: "x" })).toThrow(NotFoundError);
   });
 });
