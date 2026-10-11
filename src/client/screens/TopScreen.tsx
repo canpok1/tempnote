@@ -1,35 +1,31 @@
-import { useEffect, useState } from "react";
-import type { Status } from "../../shared/api";
+import { useState } from "react";
 import { callApi } from "../transport";
+import type { Navigate } from "../useRoute";
 
-// メモ帳を作る機能が入るまでは、バックエンドの状態を表示する
-export const TopScreen = () => {
-  const [status, setStatus] = useState<Status | null>(null);
+export const TopScreen = ({ navigate }: { navigate: Navigate }) => {
+  const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    callApi("getStatus", undefined)
-      .then(setStatus)
-      .catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)));
-  }, []);
+  const create = async () => {
+    setCreating(true);
+    setError(null);
+    try {
+      const { notebookId } = await callApi("createNotebook", undefined);
+      navigate({ screen: "notebook", notebookId });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+      setCreating(false);
+    }
+  };
 
   return (
     <section>
-      <h2>トップ</h2>
+      <p>使わなくなったら勝手に消えるメモ帳です。メモ帳の URL を知っている人なら誰でも読み書きできます。</p>
+      <p>最後に開いてから30日たったメモ帳は、中のメモごと自動で削除されます。</p>
       {error && <p role="alert">エラー: {error}</p>}
-      {!status && !error && <p>読み込み中…</p>}
-      {status && (
-        <dl>
-          <dt>環境</dt>
-          <dd data-testid="environment">{status.environment}</dd>
-          <dt>データの置き場所</dt>
-          <dd>{status.storage}</dd>
-          <dt>利用者</dt>
-          <dd>{status.user || "不明"}</dd>
-          <dt>サーバー時刻</dt>
-          <dd>{status.serverTime}</dd>
-        </dl>
-      )}
+      <button type="button" onClick={create} disabled={creating}>
+        {creating ? "作成中…" : "メモ帳を作る"}
+      </button>
     </section>
   );
 };

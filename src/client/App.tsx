@@ -11,7 +11,7 @@ export const App = () => {
     <main style={{ fontFamily: "sans-serif", padding: 16 }}>
       <h1>tempnote</h1>
       {!route && <p>読み込み中…</p>}
-      {route?.screen === "top" && <TopScreen />}
+      {route?.screen === "top" && <TopScreen navigate={navigate} />}
       {route?.screen === "notebook" && <NotebookScreen notebookId={route.notebookId} navigate={navigate} />}
       {route?.screen === "memo" && (
         <MemoScreen notebookId={route.notebookId} memoId={route.memoId} navigate={navigate} />

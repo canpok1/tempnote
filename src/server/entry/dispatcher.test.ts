@@ -1,22 +1,24 @@
 import { describe, expect, it, vi } from "vitest";
-import type { Status } from "../../shared/api";
 import { ValidationError } from "../../shared/errors";
 import type { UseCases } from "../application/useCases";
 import { createDispatcher } from "./dispatcher";
 
-const status: Status = { environment: "local", storage: "メモリ", user: "", serverTime: "2026-10-11T00:00:00.000Z" };
+const created = { notebookId: "0123456789abcdef0123456789abcdef" };
 
-const useCasesThat = (getStatus: () => Status): UseCases => ({ getStatus });
+const useCasesThat = (createNotebook: UseCases["createNotebook"]): UseCases => ({
+  createNotebook,
+  listMemos: () => [],
+});
 
 describe("createDispatcher", () => {
   it("メソッド名に対応するユースケースの結果を成功の封筒に入れる", () => {
-    const dispatch = createDispatcher(useCasesThat(() => status));
+    const dispatch = createDispatcher(useCasesThat(() => created));
 
-    expect(dispatch("getStatus", undefined)).toEqual({ ok: true, data: status });
+    expect(dispatch("createNotebook", undefined)).toEqual({ ok: true, data: created });
   });
 
   it("知らないメソッド名は NOT_FOUND にする", () => {
-    const dispatch = createDispatcher(useCasesThat(() => status));
+    const dispatch = createDispatcher(useCasesThat(() => created));
 
     expect(dispatch("unknown", undefined)).toEqual({
       ok: false,
@@ -31,7 +33,7 @@ describe("createDispatcher", () => {
       }),
     );
 
-    expect(dispatch("getStatus", undefined)).toEqual({
+    expect(dispatch("createNotebook", undefined)).toEqual({
       ok: false,
       error: { code: "INVALID", message: "入力が不正です" },
     });
@@ -45,7 +47,7 @@ describe("createDispatcher", () => {
       }),
     );
 
-    expect(dispatch("getStatus", undefined)).toEqual({
+    expect(dispatch("createNotebook", undefined)).toEqual({
       ok: false,
       error: { code: "INTERNAL", message: "サーバーでエラーが発生しました" },
     });

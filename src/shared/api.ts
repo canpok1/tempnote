@@ -1,18 +1,16 @@
 // フロントとサーバーのやり取りの定義。両方がこのファイルを import する。
+// 日時は Date ではなく ISO 形式の文字列で運ぶ（google.script.run は Date を渡せない）。
 
-export type Status = {
-  /** どの環境で動いているか */
-  environment: "gas" | "local";
-  /** データの置き場所（本番はスプレッドシート名） */
-  storage: string;
-  /** 利用者のメールアドレス。取れないときは空文字 */
-  user: string;
-  /** サーバーの現在時刻（ISO 形式） */
-  serverTime: string;
+export type MemoSummary = {
+  id: string;
+  title: string;
+  updatedAt: string;
 };
 
 export type Api = {
-  getStatus: { input: undefined; output: Status };
+  createNotebook: { input: undefined; output: { notebookId: string } };
+  /** メモ帳を開く。最終アクセス日時も更新する。メモ帳が無ければ NotFoundError */
+  listMemos: { input: { notebookId: string }; output: MemoSummary[] };
 };
 
 export type ApiMethod = keyof Api;
