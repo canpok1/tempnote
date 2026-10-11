@@ -4,6 +4,8 @@
 
 トップで「メモ帳を作る」を押すと推測されにくい ID のメモ帳ができ、その URL を知っている人なら誰でも開けます。メモ帳には Markdown のメモを100件まで書けます（本文は1件5万文字まで）。保存は保存ボタンを押したときだけで、閲覧画面には最後に更新した日時と人のメールアドレスを出します。複数の人が同じメモを同時に編集したときは、後から保存した人に「他の人が先に更新した」と知らせて保存しません（入力は消しません）。最後に開いてから30日たったメモ帳は、中のメモごと自動で消えます。
 
+見た目は [Pico CSS](https://picocss.com/) を土台にしています（判断の経緯は `docs/adr/0001-pico-css-for-styling.md`）。
+
 Markdown はブラウザ側で [marked](https://marked.js.org/) で HTML にし、[DOMPurify](https://github.com/cure53/DOMPurify) でサニタイズしてから表示します。メモの中のリンクは新しいタブで開きます。
 
 | URL | 画面 |
@@ -108,6 +110,7 @@ src/
     entry/         入口。GAS の doGet / api と、ローカルの /api が同じ dispatcher を呼ぶ
 e2e/               Playwright の E2E テスト。ローカルの開発サーバーに対して動かす
 scripts/           setup・deploy・マニフェスト生成
+docs/adr/          設計の判断の記録（ADR）
 ```
 
 ユニットテストは対象のファイルの隣に `*.test.ts` として置きます。
