@@ -1,12 +1,13 @@
 import { useDeferredValue, useState } from "react";
 import type { Memo } from "../../shared/api";
-import { ConflictError, NotFoundError } from "../../shared/errors";
+import { ConflictError } from "../../shared/errors";
 import { MAX_BODY_LENGTH, MAX_TITLE_LENGTH } from "../../shared/limits";
+import { errorMessage } from "../format";
 import { MarkdownView } from "../MarkdownView";
 import { callApi } from "../transport";
-import { errorMessage, useApi } from "../useApi";
+import { useApi } from "../useApi";
 import type { Navigate } from "../useRoute";
-import { NotFound } from "./NotFound";
+import { ApiView } from "./ApiView";
 
 type Props = { notebookId: string; memoId?: string; navigate: Navigate };
 
@@ -20,12 +21,11 @@ export const EditScreen = ({ notebookId, memoId, navigate }: Props) =>
 const LoadAndEdit = ({ notebookId, memoId, navigate }: Props & { memoId: string }) => {
   const state = useApi("getMemo", { notebookId, memoId }, `${notebookId}/${memoId}`);
 
-  if (state.kind === "loading") return <p aria-busy="true">読み込み中…</p>;
-  if (state.kind === "error") {
-    if (state.error instanceof NotFoundError) return <NotFound message={state.error.message} navigate={navigate} />;
-    return <p role="alert">エラー: {errorMessage(state.error)}</p>;
-  }
-  return <Editor notebookId={notebookId} memo={state.data} navigate={navigate} />;
+  return (
+    <ApiView state={state} navigate={navigate}>
+      {(memo) => <Editor notebookId={notebookId} memo={memo} navigate={navigate} />}
+    </ApiView>
+  );
 };
 
 const Editor = ({ notebookId, memo, navigate }: { notebookId: string; memo?: Memo; navigate: Navigate }) => {
@@ -41,10 +41,22 @@ const Editor = ({ notebookId, memo, navigate }: { notebookId: string; memo?: Mem
   const back = () =>
     navigate(memo ? { screen: "memo", notebookId, memoId: memo.id } : { screen: "notebook", notebookId });
 
-  const save = async () => {
+  /** 保存・削除を送る。失敗しても入力はそのまま残して、控えたり直したりできるようにする */
+  const submit = async (task: () => Promise<void>) => {
     setSaving(true);
     setError(null);
     try {
+      await task();
+    } catch (e) {
+      setError(errorMessage(e));
+      setConflicted(e instanceof ConflictError);
+      setConfirmingDelete(false);
+      setSaving(false);
+    }
+  };
+
+  const save = () =>
+    submit(async () => {
       const saved = await callApi("saveMemo", {
         notebookId,
         memoId: memo?.id,
@@ -54,31 +66,14 @@ const Editor = ({ notebookId, memo, navigate }: { notebookId: string; memo?: Mem
       });
       // 戻るで編集画面に戻ると、同じ内容でもう一度保存できてしまうので履歴を置き換える
       navigate({ screen: "memo", notebookId, memoId: saved.id }, { replace: true });
-    } catch (e) {
-      // 入力はそのまま残して、控えたり直したりできるようにする
-      fail(e);
-    }
-  };
+    });
 
-  const remove = async () => {
-    if (!memo) return;
-    setSaving(true);
-    setError(null);
-    try {
-      await callApi("deleteMemo", { notebookId, memoId: memo.id, baseUpdatedAt: memo.updatedAt });
+  const remove = (target: Memo) =>
+    submit(async () => {
+      await callApi("deleteMemo", { notebookId, memoId: target.id, baseUpdatedAt: target.updatedAt });
       // 削除したメモの画面へ戻るで戻れないように、履歴を置き換える
       navigate({ screen: "notebook", notebookId }, { replace: true });
-    } catch (e) {
-      fail(e);
-    }
-  };
-
-  const fail = (e: unknown) => {
-    setError(errorMessage(e));
-    setConflicted(e instanceof ConflictError);
-    setConfirmingDelete(false);
-    setSaving(false);
-  };
+    });
 
   return (
     <section>
@@ -116,10 +111,10 @@ const Editor = ({ notebookId, memo, navigate }: { notebookId: string; memo?: Mem
             )}
           </div>
         )}
-        {confirmingDelete ? (
+        {memo && confirmingDelete ? (
           <div className="actions" key="confirm-delete">
             <span>このメモを削除します。元に戻せません。</span>
-            <button type="button" className="danger" onClick={remove} disabled={saving} aria-busy={saving}>
+            <button type="button" className="danger" onClick={() => remove(memo)} disabled={saving} aria-busy={saving}>
               削除する
             </button>
             <button

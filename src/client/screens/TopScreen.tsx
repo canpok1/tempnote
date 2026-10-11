@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { errorMessage } from "../format";
 import { callApi } from "../transport";
 import type { Navigate } from "../useRoute";
 
@@ -13,7 +14,7 @@ export const TopScreen = ({ navigate }: { navigate: Navigate }) => {
       const { notebookId } = await callApi("createNotebook", undefined);
       navigate({ screen: "notebook", notebookId });
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      setError(errorMessage(e));
       setCreating(false);
     }
   };

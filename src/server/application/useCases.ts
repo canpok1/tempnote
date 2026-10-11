@@ -1,11 +1,8 @@
-import type { Api } from "../../shared/api";
+import type { ApiMethod, ApiInput as Input, ApiOutput as Output } from "../../shared/api";
 import { NotFoundError } from "../../shared/errors";
-import { assertMemoId, assertNotStale, editMemo, newMemo, validateContent } from "../domain/memo";
+import { assertMemoId, assertNotStale, editMemo, type Memo, newMemo, validateContent } from "../domain/memo";
 import { assertNotebookId, isExpired, type Notebook, newNotebook, touchNotebook } from "../domain/notebook";
 import type { Ports } from "./ports";
-
-type Input<M extends keyof Api> = Api[M]["input"];
-type Output<M extends keyof Api> = Api[M]["output"];
 
 export const createUseCases = ({ notebooks, memos, clock, user, ids, lock }: Ports) => {
   /** メモ帳を開いた扱いにして最終アクセス日時を進める。無ければ NotFoundError。ロックの中で呼ぶ */
@@ -17,6 +14,13 @@ export const createUseCases = ({ notebooks, memos, clock, user, ids, lock }: Por
     return touched;
   };
 
+  const requireMemo = (notebookId: string, memoId: string): Memo => {
+    const memo = memos.find(notebookId, memoId);
+    if (!memo) throw new NotFoundError("メモが見つかりません");
+    return memo;
+  };
+
+  // API のメソッドと1対1で対応させる。dispatcher はメソッド名でここを直接引くので、足し忘れや余分は型チェックで落ちる
   return {
     createNotebook: (): Output<"createNotebook"> =>
       lock.run(() => {
@@ -41,9 +45,7 @@ export const createUseCases = ({ notebooks, memos, clock, user, ids, lock }: Por
       assertMemoId(memoId);
       return lock.run(() => {
         openNotebook(notebookId);
-        const memo = memos.find(notebookId, memoId);
-        if (!memo) throw new NotFoundError("メモが見つかりません");
-        return memo;
+        return requireMemo(notebookId, memoId);
       });
     },
 
@@ -61,8 +63,7 @@ export const createUseCases = ({ notebooks, memos, clock, user, ids, lock }: Por
         if (memoId === undefined) {
           memo = newMemo(ids.generate(), content, memos.list(notebookId).length, now, user.email());
         } else {
-          const current = memos.find(notebookId, memoId);
-          if (!current) throw new NotFoundError("メモが見つかりません");
+          const current = requireMemo(notebookId, memoId);
           assertNotStale(current, input.baseUpdatedAt);
           memo = editMemo(current, content, now, user.email());
         }
@@ -77,14 +78,12 @@ export const createUseCases = ({ notebooks, memos, clock, user, ids, lock }: Por
       assertMemoId(memoId);
       return lock.run(() => {
         openNotebook(notebookId);
-        const current = memos.find(notebookId, memoId);
-        if (!current) throw new NotFoundError("メモが見つかりません");
-        assertNotStale(current, input.baseUpdatedAt);
+        assertNotStale(requireMemo(notebookId, memoId), input.baseUpdatedAt);
         memos.delete(notebookId, memoId);
         return null;
       });
     },
-  };
+  } satisfies { [M in ApiMethod]: (input: Input<M>) => Output<M> };
 };
 
 export type UseCases = ReturnType<typeof createUseCases>;

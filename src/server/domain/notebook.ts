@@ -1,6 +1,7 @@
 // メモ帳。ID を知っている人なら誰でも開ける単位で、最終アクセスから一定の日数（設定 expiryDays）で消える。
 
 import { NotFoundError } from "../../shared/errors";
+import { isId } from "./id";
 
 export type Notebook = {
   /** UUID v4 からハイフンを抜いた32文字 */
@@ -10,8 +11,6 @@ export type Notebook = {
   /** ISO 形式（ミリ秒まで）。メモ帳のどの画面を開いても更新する */
   lastAccessedAt: string;
 };
-
-const ID_PATTERN = /^[0-9a-f]{32}$/;
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -35,5 +34,5 @@ export const isExpired = (notebook: Notebook, now: Date, expiryDays: number): bo
  * GAS ではシート名に ID を使うため、ここで弾いておく。
  */
 export function assertNotebookId(id: unknown): asserts id is string {
-  if (typeof id !== "string" || !ID_PATTERN.test(id)) throw new NotFoundError("メモ帳が見つかりません");
+  if (!isId(id)) throw new NotFoundError("メモ帳が見つかりません");
 }
