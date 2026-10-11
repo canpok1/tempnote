@@ -8,6 +8,7 @@ let connected = false;
 export const gasNavigation: Navigation = {
   current: () => new Promise((resolve) => googleScript().url.getLocation((location) => resolve(location.parameter))),
   push: (params) => googleScript().history.push(null, params, ""),
+  replace: (params) => googleScript().history.replace(null, params, ""),
   onChange: (listener) => {
     if (!connected) {
       googleScript().history.setChangeHandler((event) => {

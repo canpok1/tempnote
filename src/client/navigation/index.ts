@@ -12,6 +12,8 @@ export type Navigation = {
   current(): Promise<Params>;
   /** パラメータを置き換えて履歴を1つ積む。渡さなかったパラメータは消える */
   push(params: Params): void;
+  /** push と同じだが、履歴を積まずに今の項目を置き換える */
+  replace(params: Params): void;
   /** 戻る・進むでパラメータが変わったときに呼ぶ。戻り値で登録を外す */
   onChange(listener: (params: Params) => void): () => void;
 };

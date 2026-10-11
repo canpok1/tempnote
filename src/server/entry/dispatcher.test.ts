@@ -8,6 +8,12 @@ const created = { notebookId: "0123456789abcdef0123456789abcdef" };
 const useCasesThat = (createNotebook: UseCases["createNotebook"]): UseCases => ({
   createNotebook,
   listMemos: () => [],
+  getMemo: () => {
+    throw new Error("not used");
+  },
+  saveMemo: () => {
+    throw new Error("not used");
+  },
 });
 
 describe("createDispatcher", () => {

@@ -43,5 +43,16 @@ export const createMemoryRepositories = (
   },
   memos: {
     list: (notebookId) => copy(store.memos.get(notebookId) ?? []),
+    find: (notebookId, memoId) => {
+      const memo = store.memos.get(notebookId)?.find((m) => m.id === memoId);
+      return memo ? copy(memo) : null;
+    },
+    save: (notebookId, memo) => {
+      const list = store.memos.get(notebookId) ?? [];
+      const index = list.findIndex((m) => m.id === memo.id);
+      if (index >= 0) list[index] = copy(memo);
+      else list.push(copy(memo));
+      store.memos.set(notebookId, list);
+    },
   },
 });

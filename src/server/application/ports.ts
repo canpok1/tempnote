@@ -15,9 +15,18 @@ export type NotebookRepository = {
 export type MemoRepository = {
   /** メモ帳の中のメモ。作成順 */
   list(notebookId: string): Memo[];
+  /** 無ければ null */
+  find(notebookId: string, memoId: string): Memo | null;
+  /** 同じ ID のメモがあれば上書きし、無ければ末尾に足す */
+  save(notebookId: string, memo: Memo): void;
 };
 
 export type Clock = { now(): Date };
+
+export type CurrentUser = {
+  /** 操作している人のメールアドレス。取れないときは空文字 */
+  email(): string;
+};
 
 export type IdGenerator = {
   /** 推測されにくいランダムな ID（UUID v4 からハイフンを抜いた32文字） */
@@ -31,6 +40,7 @@ export type Ports = {
   notebooks: NotebookRepository;
   memos: MemoRepository;
   clock: Clock;
+  user: CurrentUser;
   ids: IdGenerator;
   lock: Lock;
 };
