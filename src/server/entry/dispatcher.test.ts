@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import type { Status } from "../../shared/api";
-import { AppError } from "../../shared/errors";
+import { ValidationError } from "../../shared/errors";
 import type { UseCases } from "../application/useCases";
 import { createDispatcher } from "./dispatcher";
 
@@ -24,10 +24,10 @@ describe("createDispatcher", () => {
     });
   });
 
-  it("AppError はコードとメッセージをそのまま封筒に詰める", () => {
+  it("AppError のサブクラスはコードとメッセージをそのまま封筒に詰める", () => {
     const dispatch = createDispatcher(
       useCasesThat(() => {
-        throw new AppError("INVALID", "入力が不正です");
+        throw new ValidationError("入力が不正です");
       }),
     );
 

@@ -3,7 +3,7 @@
 
 import type { ApiMethod } from "../../shared/api";
 import type { Envelope } from "../../shared/envelope";
-import { AppError } from "../../shared/errors";
+import { AppError, NotFoundError } from "../../shared/errors";
 import type { UseCases } from "../application/useCases";
 
 const routes = (useCases: UseCases): Record<ApiMethod, (input: unknown) => unknown> => ({
@@ -15,7 +15,7 @@ export const createDispatcher = (useCases: UseCases) => {
   return (method: string, input: unknown): Envelope => {
     try {
       const handler = table[method as ApiMethod];
-      if (!handler) throw new AppError("NOT_FOUND", `unknown method: ${method}`);
+      if (!handler) throw new NotFoundError(`unknown method: ${method}`);
       return { ok: true, data: handler(input) };
     } catch (e) {
       if (e instanceof AppError) return { ok: false, error: { code: e.code, message: e.message } };
