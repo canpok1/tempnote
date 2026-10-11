@@ -17,6 +17,8 @@ jobs:
       SCRIPT_ID: ${{ secrets.SCRIPT_ID }}
       DEPLOYMENT_ID: ${{ secrets.DEPLOYMENT_ID }}
       ALLOW_ANYONE: ${{ vars.ALLOW_ANYONE }}
+      # GAS の「デプロイを管理」に出る名前。環境名にして staging と production を見分ける
+      DEPLOY_NAME: ${{ startsWith(github.ref, 'refs/tags/') && 'production' || 'staging' }}
     steps:
       - name: Check secrets
         id: check

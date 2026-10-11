@@ -1,5 +1,5 @@
 // 空のスプレッドシートに tempnote を構築する。
-//   npm run setup -- <スプレッドシートID> [--allow-anyone]
+//   npm run setup -- <スプレッドシートID> [--name <デプロイ名>] [--allow-anyone]
 // スプレッドシートに紐づく GAS プロジェクトを作り、ビルド・push・デプロイまで行う。
 // 作った ID は git 管理外の .clasp.json と .deploy.json に保存する。
 
@@ -8,10 +8,13 @@ import { assertClaspLogin, build, CLASP_FILE, claspJson, DEPLOY_FILE, ROOT_DIR, 
 
 const args = process.argv.slice(2);
 const allowAnyone = args.includes("--allow-anyone");
-const spreadsheetId = args.find((a) => !a.startsWith("--"));
+const nameIndex = args.indexOf("--name");
+// GAS の「デプロイを管理」で環境を見分けるための名前（デプロイの説明）
+const name = nameIndex >= 0 ? args[nameIndex + 1] : "web";
+const spreadsheetId = args.find((a, i) => !a.startsWith("--") && (nameIndex < 0 || i !== nameIndex + 1));
 
-if (!spreadsheetId) {
-  console.error("使い方: npm run setup -- <スプレッドシートID> [--allow-anyone]");
+if (!spreadsheetId || !name || name.startsWith("--")) {
+  console.error("使い方: npm run setup -- <スプレッドシートID> [--name <デプロイ名>] [--allow-anyone]");
   process.exit(1);
 }
 if (existsSync(CLASP_FILE) || existsSync(DEPLOY_FILE)) {
@@ -31,8 +34,8 @@ console.log("\n== push ==");
 run("npx", ["clasp", "push", "--force"]);
 
 console.log("\n== デプロイ ==");
-const { deploymentId } = claspJson(["create-deployment", "--description", "web"]);
-writeFileSync(DEPLOY_FILE, `${JSON.stringify({ deploymentId, allowAnyone }, null, 2)}\n`);
+const { deploymentId } = claspJson(["create-deployment", "--description", name]);
+writeFileSync(DEPLOY_FILE, `${JSON.stringify({ deploymentId, name, allowAnyone }, null, 2)}\n`);
 
 console.log(`
 構築が終わりました。

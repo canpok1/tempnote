@@ -38,6 +38,8 @@ http://localhost:5173 を開きます。開発サーバーは全インターフ�
 
    公開範囲は既定で「同じドメイン内」です。Google Workspace ではない無料アカウントで使うときは、Google アカウントを持つ全員に公開する `--allow-anyone` を付けます。
 
+   `--name staging` のように名前を付けると、GAS の「デプロイを管理」にその名前で表示されます（省略時は `web`）。自動デプロイでは GitHub の環境名（`staging` / `production`）が付きます。
+
 4. 表示された URL を、構築したアカウントで開いて権限を承認する
 
 スクリプト ID とデプロイ ID は、git 管理外の `.clasp.json` と `.deploy.json` に保存されます。
