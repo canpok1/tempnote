@@ -8,7 +8,7 @@ export const App = () => {
   const { route, navigate } = useRoute();
 
   return (
-    <main style={{ fontFamily: "sans-serif", padding: 16 }}>
+    <main>
       <h1>tempnote</h1>
       {!route && <p>読み込み中…</p>}
       {route?.screen === "top" && <TopScreen navigate={navigate} />}

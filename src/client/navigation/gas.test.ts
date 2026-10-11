@@ -12,6 +12,7 @@ const installFakeGoogleScript = (initial: Record<string, string>) => {
   let changeHandler: ((event: { state: unknown; location: GasLocation }) => void) | undefined;
   const history = {
     push: vi.fn(),
+    replace: vi.fn(),
     setChangeHandler: vi.fn((handler) => {
       changeHandler = handler;
     }),
@@ -51,6 +52,16 @@ describe("gasNavigation", () => {
     navigation.push({ id: "nb1", memo: "m1" });
 
     expect(fake.history.push).toHaveBeenCalledWith(null, { id: "nb1", memo: "m1" }, "");
+  });
+
+  it("replace は履歴を積まずに置き換える", async () => {
+    const fake = installFakeGoogleScript({});
+    const navigation = await load();
+
+    navigation.replace({ id: "nb1" });
+
+    expect(fake.history.replace).toHaveBeenCalledWith(null, { id: "nb1" }, "");
+    expect(fake.history.push).not.toHaveBeenCalled();
   });
 
   it("戻る・進むの通知を登録中のリスナー全員に配り、外したリスナーには配らない", async () => {

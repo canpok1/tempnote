@@ -13,6 +13,8 @@ const activeBook = () => {
 export const createGasPorts = (): Ports => ({
   ...createSheetRepositories(activeBook),
   clock: { now: () => new Date() },
+  // 「実行ユーザー: デプロイした自分」で公開しているため、取れるのはデプロイした人と同じ Workspace ドメインの利用者だけ
+  user: { email: () => Session.getActiveUser().getEmail() },
   ids: { generate: () => Utilities.getUuid().replace(/-/g, "") },
   lock: {
     run: (task) => {

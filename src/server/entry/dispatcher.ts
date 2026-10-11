@@ -9,6 +9,8 @@ import type { UseCases } from "../application/useCases";
 const routes = (useCases: UseCases): Record<ApiMethod, (input: unknown) => unknown> => ({
   createNotebook: () => useCases.createNotebook(),
   listMemos: (input) => useCases.listMemos(input as Api["listMemos"]["input"]),
+  getMemo: (input) => useCases.getMemo(input as Api["getMemo"]["input"]),
+  saveMemo: (input) => useCases.saveMemo(input as Api["saveMemo"]["input"]),
 });
 
 export const createDispatcher = (useCases: UseCases) => {

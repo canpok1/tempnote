@@ -1,0 +1,40 @@
+/* 見た目は最小限。サンプルとして UI ライブラリには頼らない */
+
+:root {
+  color-scheme: light dark;
+  font-family: system-ui, sans-serif;
+  line-height: 1.6;
+}
+
+body {
+  margin: 0;
+}
+
+main {
+  max-width: 48rem;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+input,
+textarea {
+  box-sizing: border-box;
+  width: 100%;
+  font: inherit;
+}
+
+textarea {
+  font-family: ui-monospace, monospace;
+}
+
+[role="alert"] {
+  color: #c62828;
+}
+
+.markdown {
+  overflow-wrap: anywhere;
+}
+
+.markdown pre {
+  overflow-x: auto;
+}

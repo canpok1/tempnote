@@ -25,11 +25,12 @@ export const createSheetRepositories = (
   book: () => BookLike,
 ): { notebooks: NotebookRepository; memos: MemoRepository } => {
   const notebookTable = () => openTable(book(), NOTEBOOKS_SHEET, NOTEBOOK_COLUMNS);
+  const memoTable = (notebookId: string) => openTable(book(), memoSheetName(notebookId), MEMO_COLUMNS);
   return {
     notebooks: {
       create: (notebook) => {
         notebookTable().append(notebook);
-        openTable(book(), memoSheetName(notebook.id), MEMO_COLUMNS);
+        memoTable(notebook.id);
       },
       find: (id) => findRow(notebookTable(), id)?.values ?? null,
       update: (notebook) => {
@@ -40,10 +41,20 @@ export const createSheetRepositories = (
       },
     },
     memos: {
+      find: (notebookId, memoId) => {
+        if (!book().getSheetByName(memoSheetName(notebookId))) return null;
+        return findRow(memoTable(notebookId), memoId)?.values ?? null;
+      },
+      save: (notebookId, memo) => {
+        const table = memoTable(notebookId);
+        const row = findRow(table, memo.id);
+        if (row) table.update(row.rowNumber, memo);
+        else table.append(memo);
+      },
       list: (notebookId) => {
         // シートが無いのはメモ帳が無いときだけ。呼ぶ側がメモ帳の存在を確かめているので、ここでは作らずに空とする
         if (!book().getSheetByName(memoSheetName(notebookId))) return [];
-        return openTable(book(), memoSheetName(notebookId), MEMO_COLUMNS)
+        return memoTable(notebookId)
           .rows()
           .map((row) => row.values);
       },

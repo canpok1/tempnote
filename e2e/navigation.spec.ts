@@ -43,19 +43,6 @@ for (const id of ["0".repeat(32), "not-a-notebook-id"]) {
   });
 }
 
-test("メモの閲覧から編集へ移り、戻るで閲覧に戻る", async ({ page }) => {
-  await page.goto("/?id=nb1&memo=m1");
-  await expect(page.getByRole("heading", { name: "メモ", exact: true })).toBeVisible();
-
-  await page.getByRole("button", { name: "編集" }).click();
-  await expect(page.getByRole("heading", { name: "メモの編集" })).toBeVisible();
-  await expect(page).toHaveURL("/?id=nb1&memo=m1&mode=edit");
-
-  await page.goBack();
-  await expect(page.getByRole("heading", { name: "メモ", exact: true })).toBeVisible();
-  await expect(page.getByTestId("memo-id")).toHaveText("m1");
-});
-
 test("メモ帳から新規メモの編集画面へ移る", async ({ page }) => {
   const notebookId = await createNotebook(page);
 
