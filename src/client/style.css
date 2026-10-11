@@ -1,34 +1,166 @@
-/* 見た目は最小限。サンプルとして UI ライブラリには頼らない */
+/* 見た目の土台は Pico CSS（main.tsx で読み込む）。ここには Pico で足りない分だけを書く */
 
+/* 本文の幅。編集画面だけは入力欄とプレビューを並べるので広げ、上部のバーもそれに揃える */
 :root {
-  color-scheme: light dark;
-  font-family: system-ui, sans-serif;
-  line-height: 1.6;
+  --content-width: 48rem;
 }
 
-body {
-  margin: 0;
+:root:has(.editor) {
+  --content-width: 80rem;
 }
 
 main {
-  max-width: 48rem;
+  max-width: var(--content-width);
   margin: 0 auto;
-  padding: 1rem;
+  padding: 1.5rem 1rem;
 }
 
-input,
-textarea {
-  box-sizing: border-box;
-  width: 100%;
-  font: inherit;
+/* 共通のバー。アプリ名と道しるべはボタンだが、文字のリンクのように見せる */
+.app-bar {
+  border-bottom: 1px solid var(--pico-muted-border-color);
 }
 
-textarea {
-  font-family: ui-monospace, monospace;
+.app-bar nav {
+  max-width: var(--content-width);
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.app-bar button,
+.memo-list button {
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: none;
+  color: var(--pico-primary);
+  text-align: left;
+}
+
+.app-bar h1 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.app-bar .brand {
+  font-weight: 700;
+}
+
+.crumbs {
+  font-size: 0.875rem;
+  color: var(--pico-muted-color);
+}
+
+.crumbs li {
+  display: flex;
+  align-items: center;
+}
+
+.crumbs li + li::before {
+  content: "›";
+  margin-right: 0.5rem;
+}
+
+/* 見出しの横に、その画面の主な操作を置く */
+.title-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.title-row h2 {
+  margin: 0;
+}
+
+.title-row button {
+  margin: 0;
+}
+
+small {
+  color: var(--pico-muted-color);
+}
+
+.memo-list {
+  padding: 0;
+  border-top: 1px solid var(--pico-muted-border-color);
+}
+
+.memo-list li {
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  margin: 0;
+  padding: 0.6rem 0.25rem;
+  border-bottom: 1px solid var(--pico-muted-border-color);
+}
+
+.memo-list button {
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.memo-list .untitled {
+  color: var(--pico-muted-color);
+}
+
+.memo-list small {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 主な操作・戻る系・削除を1行に並べ、削除だけ右端へ離す */
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.actions button {
+  width: auto;
+  margin: 0;
+}
+
+.actions .push-end {
+  margin-left: auto;
+}
+
+/* Pico はホバー・フォーカス時に色を差し替えるので、その状態でも赤のままにする。
+   状態の並びは Pico と同じにして、詳細度で Pico に負けないようにしている */
+button.danger,
+button.danger:is([aria-current]:not([aria-current="false"]), :hover, :active, :focus) {
+  --pico-background-color: var(--pico-del-color);
+  --pico-border-color: var(--pico-del-color);
+  /* 明るい配色では白、暗い配色では黒になり、どちらでも赤の上で読める */
+  --pico-color: var(--pico-contrast-inverse);
+}
+
+button.outline.danger,
+button.outline.danger:is([aria-current]:not([aria-current="false"]), :hover, :active, :focus) {
+  --pico-background-color: transparent;
+  --pico-border-color: var(--pico-del-color);
+  --pico-color: var(--pico-del-color);
 }
 
 [role="alert"] {
-  color: #c62828;
+  color: var(--pico-del-color);
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  border: 1px solid var(--pico-del-color);
+  border-radius: var(--pico-border-radius);
+}
+
+[role="alert"] > :last-child {
+  margin-bottom: 0;
+}
+
+textarea {
+  font-family: var(--pico-font-family-monospace);
+  font-size: 0.875rem;
 }
 
 .markdown {
@@ -39,19 +171,14 @@ textarea {
   overflow-x: auto;
 }
 
-/* 編集画面は入力欄とプレビューを並べる。狭い画面では縦に積む */
-main:has(.editor) {
-  max-width: 80rem;
+.markdown > :last-child {
+  margin-bottom: 0;
 }
 
+/* 編集画面は入力欄とプレビューを並べる。狭い画面では縦に積む */
 .editor {
   display: grid;
   gap: 1rem;
-  margin: 1em 0;
-}
-
-.editor > * {
-  margin: 0;
 }
 
 @media (min-width: 60rem) {
@@ -61,9 +188,7 @@ main:has(.editor) {
 }
 
 .preview .markdown {
-  box-sizing: border-box;
   max-height: 32rem;
   overflow-y: auto;
-  padding: 0 0.5rem;
-  border: 1px solid #8884;
+  margin-top: 0.4rem;
 }

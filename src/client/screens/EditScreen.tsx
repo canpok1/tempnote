@@ -20,7 +20,7 @@ export const EditScreen = ({ notebookId, memoId, navigate }: Props) =>
 const LoadAndEdit = ({ notebookId, memoId, navigate }: Props & { memoId: string }) => {
   const state = useApi("getMemo", { notebookId, memoId }, `${notebookId}/${memoId}`);
 
-  if (state.kind === "loading") return <p>読み込み中…</p>;
+  if (state.kind === "loading") return <p aria-busy="true">読み込み中…</p>;
   if (state.kind === "error") {
     if (state.error instanceof NotFoundError) return <NotFound message={state.error.message} navigate={navigate} />;
     return <p role="alert">エラー: {errorMessage(state.error)}</p>;
@@ -89,25 +89,18 @@ const Editor = ({ notebookId, memo, navigate }: { notebookId: string; memo?: Mem
           save();
         }}
       >
-        <p>
-          <label>
-            タイトル
-            <br />
-            <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={MAX_TITLE_LENGTH} />
-          </label>
-        </p>
+        <label>
+          タイトル
+          <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={MAX_TITLE_LENGTH} />
+        </label>
         <div className="editor">
-          <p>
-            <label>
-              本文（Markdown）
-              <br />
-              <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={16} />
-            </label>
-            <br />
+          <label>
+            本文（Markdown）
+            <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={16} />
             <small>
               {body.length.toLocaleString()} / {MAX_BODY_LENGTH.toLocaleString()} 文字
             </small>
-          </p>
+          </label>
           <div className="preview">
             プレビュー
             <MarkdownView markdown={previewBody} label="プレビュー" />
@@ -117,38 +110,47 @@ const Editor = ({ notebookId, memo, navigate }: { notebookId: string; memo?: Mem
           <div role="alert">
             <p>{conflicted ? error : `保存できませんでした: ${error}`}</p>
             {conflicted && memo && (
-              <p>
-                <button type="button" onClick={back}>
-                  入力を捨てて最新のメモを開く
-                </button>
-              </p>
+              <button type="button" onClick={back}>
+                入力を捨てて最新のメモを開く
+              </button>
             )}
           </div>
         )}
-        <button type="submit" disabled={saving || conflicted}>
-          {saving ? "保存中…" : "保存"}
-        </button>{" "}
-        <button type="button" onClick={back} disabled={saving}>
-          キャンセル
-        </button>
-        {memo && !confirmingDelete && (
-          <>
-            {" "}
-            <button type="button" onClick={() => setConfirmingDelete(true)} disabled={saving || conflicted}>
-              削除
-            </button>
-          </>
-        )}
-        {memo && confirmingDelete && (
-          <p>
-            このメモを削除します。元に戻せません。{" "}
-            <button type="button" onClick={remove} disabled={saving}>
+        {confirmingDelete ? (
+          <div className="actions" key="confirm-delete">
+            <span>このメモを削除します。元に戻せません。</span>
+            <button type="button" className="danger" onClick={remove} disabled={saving} aria-busy={saving}>
               削除する
-            </button>{" "}
-            <button type="button" onClick={() => setConfirmingDelete(false)} disabled={saving}>
+            </button>
+            <button
+              type="button"
+              className="outline secondary"
+              onClick={() => setConfirmingDelete(false)}
+              disabled={saving}
+            >
               やめる
             </button>
-          </p>
+          </div>
+        ) : (
+          // 確認の前後でボタンの DOM を使い回すと、保存ボタンの色が削除ボタンへ遷移して見えるので key で分ける
+          <div className="actions" key="edit">
+            <button type="submit" disabled={saving || conflicted} aria-busy={saving}>
+              {saving ? "保存中…" : "保存"}
+            </button>
+            <button type="button" className="outline secondary" onClick={back} disabled={saving}>
+              キャンセル
+            </button>
+            {memo && (
+              <button
+                type="button"
+                className="outline danger push-end"
+                onClick={() => setConfirmingDelete(true)}
+                disabled={saving || conflicted}
+              >
+                削除
+              </button>
+            )}
+          </div>
         )}
       </form>
     </section>

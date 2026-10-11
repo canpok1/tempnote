@@ -28,6 +28,11 @@
 
 `src/shared/api.ts` の `Api` に型を足し、ユースケースと `src/server/entry/dispatcher.ts` の振り分けを足す。振り分け表は `Record<ApiMethod, ...>` なので、足し忘れると型チェックで落ちる。画面からは `src/client/transport/` の `callApi` だけで呼ぶ。
 
+## 見た目
+
+- Pico CSS を土台にする。まず HTML の要素と Pico の class（`secondary`・`outline` など）で表し、足りない分だけ `src/client/style.css` に書く
+- 色は Pico の CSS 変数（`--pico-*`）から取る。色を直接書くとダークモードで読めなくなる
+
 ## GAS の制約
 
 - サーバー側のコードは GAS の V8 で動く。`src/server/entry/gas.ts` から辿れるコード（`shared/`・domain・application を含む）で Node の API を使わない
