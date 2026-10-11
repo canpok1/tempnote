@@ -2,7 +2,7 @@
 
 使わなくなったら勝手に消えるメモ帳です。スプレッドシートを DB、Google Apps Script（GAS）をバックエンドにしています。
 
-今は基盤と画面の切り替えだけです。URL のパラメータに応じてトップ・メモ帳・メモ閲覧・メモ編集の4画面を出し分けますが、メモ帳とメモの中身はまだありません。トップにはバックエンドから取得した情報（動いている環境・データの置き場所・利用者・サーバー時刻）を表示します。
+トップで「メモ帳を作る」を押すと推測されにくい ID のメモ帳ができ、その URL を知っている人なら誰でも開けます。最後に開いてから30日たったメモ帳は自動で消えます（実装中）。メモの作成・編集はこれから作ります。
 
 | URL | 画面 |
 | --- | --- |
@@ -94,11 +94,11 @@ src/
     transport/     サーバー呼び出し。本番は google.script.run、ローカルは fetch
     navigation/    URL のパラメータと履歴。本番は google.script.url / history、ローカルは location / history
   server/
-    domain/        メモ帳・メモとそのルール（これから作る）
+    domain/        メモ帳・メモとそのルール
     application/   ユースケースと、インフラ層に求めるインターフェース（ports）
     infrastructure/
-      gas/         GAS 版の実装（SpreadsheetApp・Session など）
-      local/       ローカル版の実装
+      gas/         GAS 版の実装（SpreadsheetApp・LockService など）
+      local/       ローカル版の実装。データはメモリに持ち、開発サーバーを再起動すると消える
     entry/         入口。GAS の doGet / api と、ローカルの /api が同じ dispatcher を呼ぶ
 e2e/               Playwright の E2E テスト。ローカルの開発サーバーに対して動かす
 scripts/           setup・deploy・マニフェスト生成
@@ -109,6 +109,22 @@ scripts/           setup・deploy・マニフェスト生成
 アプリのコードは例外でエラーを扱います。`AppError` のサブクラス（`ConflictError` / `NotFoundError` / `LimitExceededError` / `ValidationError`）をサーバーで throw すると、画面で同じクラスとして catch できます（`src/shared/errors.ts`）。`google.script.run` は例外のクラスを運べないため、通信の区間だけ `{ ok, data | error }` の封筒に詰め替え、受け取った側でコードから同じクラスに戻します（`src/shared/envelope.ts`）。
 
 GAS の画面は iframe の中で動くため、`location` や `history` を直接触っても利用者が見ている URL は変わりません。画面は URL を `src/client/navigation/` だけを通して読み書きします。iframe の外へ出るリンク（`<a href>`）も使えないので、画面の移動はボタンで行います。
+
+### データの置き場所
+
+本番では、`npm run setup` に渡したスプレッドシートにアプリ自身がシートを作ります。手で作るものはありません。
+
+| シート | 1行の中身 | 列 |
+| --- | --- | --- |
+| `notebooks` | メモ帳1冊 | `id`・`createdAt`・`lastAccessedAt` |
+| `nb_<メモ帳ID>` | メモ1件 | `id`・`title`・`body`・`createdAt`・`updatedAt`・`updatedBy` |
+
+- 列は位置ではなく1行目のヘッダー名で読みます。シートやヘッダーが無ければ、最初に使ったときに作ります
+- メモ帳のシートは作るときに6列・ヘッダー1行に縮めます。既定の 1000行×26列 のままだと、スプレッドシート全体の1000万セルの上限に約380冊で届くためです
+- セルはすべて書式なしテキストにします。日時や ID が日付・数値に変換されないようにするためです
+- 書き込みは `LockService` で直列化します
+
+ローカル版とスプレッドシート版の Repository には同じテスト（`src/server/application/repositoryContract.ts`）を当てています。スプレッドシート版は `SpreadsheetApp` を真似たフェイク（`src/server/infrastructure/gas/fakeSpreadsheet.ts`）の上で動かします。
 
 ### 層の依存の向き
 

@@ -1,10 +1,10 @@
 // GAS の入口。ここで公開した関数は、ビルド時に GAS の直下へ書き出される（vite.server.config.ts）。
 
 import { createUseCases } from "../application/useCases";
-import { gasEnvironment } from "../infrastructure/gas/gasEnvironment";
+import { createGasPorts } from "../infrastructure/gas/gasPorts";
 import { createDispatcher } from "./dispatcher";
 
-const dispatch = createDispatcher(createUseCases(gasEnvironment));
+const dispatch = createDispatcher(createUseCases(createGasPorts()));
 
 export const doGet = () =>
   HtmlService.createHtmlOutputFromFile("index")
