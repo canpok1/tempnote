@@ -1,6 +1,6 @@
 import { NotFoundError } from "../../shared/errors";
 import { formatDateTime } from "../format";
-import { renderMarkdown } from "../markdown";
+import { MarkdownView } from "../MarkdownView";
 import { errorMessage, useApi } from "../useApi";
 import type { Navigate } from "../useRoute";
 import { NotFound } from "./NotFound";
@@ -32,12 +32,7 @@ export const MemoScreen = ({
               更新: {formatDateTime(state.data.updatedAt)}・{state.data.updatedBy || "不明"}
             </small>
           </p>
-          <article
-            className="markdown"
-            // renderMarkdown が DOMPurify でサニタイズ済み
-            // biome-ignore lint/security/noDangerouslySetInnerHtml: サニタイズした HTML を表示するため
-            dangerouslySetInnerHTML={{ __html: renderMarkdown(state.data.body) }}
-          />
+          <MarkdownView markdown={state.data.body} />
         </>
       )}
       <button type="button" onClick={() => navigate({ screen: "edit", notebookId, memoId })}>
