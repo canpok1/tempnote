@@ -1,3 +1,4 @@
+import logoUrl from "./logo.svg";
 import type { Route } from "./route";
 import { EditScreen } from "./screens/EditScreen";
 import { MemoScreen } from "./screens/MemoScreen";
@@ -34,6 +35,7 @@ const Header = ({ route, navigate }: { route: Route | null; navigate: Navigate }
         <li>
           <h1>
             <button type="button" className="brand" onClick={() => navigate({ screen: "top" })}>
+              <img src={logoUrl} alt="" />
               tempnote
             </button>
           </h1>

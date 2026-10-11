@@ -98,6 +98,13 @@ npm run deploy
 | `DEPLOYMENT_ID` | シークレット | `npm run setup` が表示したデプロイ ID |
 | `CLASPRC_JSON` | シークレット | `~/.clasprc.json` の中身 |
 | `ALLOW_ANYONE` | 変数（任意） | `true` のときだけ、Google アカウントを持つ全員に公開する |
+| `FAVICON_URL` | 変数（任意） | ファビコンの画像 URL。下記「ロゴとファビコン」 |
+
+### ロゴとファビコン
+
+ロゴは `src/client/logo.svg` です。GAS は画面の HTML に書いたファビコンを無視するため、PNG にした `assets/favicon.png` を GitHub から配り、その URL を `doGet` で付けます（`docs/adr/0002-favicon-served-from-github.md`）。URL はビルド時に、GitHub Actions では実行中のリポジトリ、手元では `package.json` の `repository` から決まり、`main` ブランチの画像を指します。リポジトリを非公開にするなど GitHub から読めないときは、`FAVICON_URL`（手元では環境変数、自動デプロイでは上の変数）で別の URL を指定してください。
+
+ロゴを変えたら `npm run favicon` で PNG を作り直してコミットします（`npx playwright install chromium` が要る）。
 
 ### GAS のバージョン数
 
@@ -120,7 +127,8 @@ src/
       local/       ローカル版の実装。データはメモリに持ち、開発サーバーを再起動すると消える
     entry/         入口。GAS の doGet / api と、ローカルの /api が同じ dispatcher を呼ぶ
 e2e/               Playwright の E2E テスト。ローカルの開発サーバーに対して動かす
-scripts/           setup・deploy・マニフェスト生成
+scripts/           setup・deploy・マニフェスト生成・ファビコンの PNG 生成
+assets/            GitHub から配る画像（ファビコン）
 docs/adr/          設計の判断の記録（ADR）
 ```
 
