@@ -1,0 +1,36 @@
+{
+  "name": "tempnote",
+  "description": "使わなくなったら勝手に消えるメモ帳です。",
+  "scripts": {
+    "dev": "vite",
+    "build": "rm -rf dist/gas && vite build --mode gas && vite build --config vite.server.config.ts && node scripts/write-manifest.mjs",
+    "typecheck": "tsc",
+    "setup": "node scripts/setup.mjs",
+    "deploy": "node scripts/deploy.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/canpok1/tempnote.git"
+  },
+  "bugs": {
+    "url": "https://github.com/canpok1/tempnote/issues"
+  },
+  "homepage": "https://github.com/canpok1/tempnote#readme",
+  "devDependencies": {
+    "@google/clasp": "^3.4.1",
+    "@types/google-apps-script": "^2.0.13",
+    "@types/node": "^26.6.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4",
+    "vite-plugin-singlefile": "^2.3.3"
+  },
+  "dependencies": {
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "private": true,
+  "type": "module"
+}
