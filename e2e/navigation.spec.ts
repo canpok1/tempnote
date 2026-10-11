@@ -13,7 +13,8 @@ test("メモ帳を作るとメモ帳画面へ移り、トップへ出てから�
   expect(notebookId).toMatch(/^[0-9a-f]{32}$/);
   await expect(page.getByText("メモはまだありません。")).toBeVisible();
 
-  await page.getByRole("button", { name: "トップへ" }).click();
+  // 上部のバーのアプリ名でトップへ出る
+  await page.getByRole("button", { name: "tempnote" }).click();
   await expect(page.getByRole("button", { name: "メモ帳を作る" })).toBeVisible();
   await expect(page).toHaveURL("/");
 
@@ -50,4 +51,16 @@ test("メモ帳から新規メモの編集画面へ移る", async ({ page }) => 
 
   await expect(page.getByRole("heading", { name: "新規メモ" })).toBeVisible();
   await expect(page).toHaveURL(`/?id=${notebookId}&mode=edit`);
+});
+
+test("道しるべのメモ帳を押すと、編集画面からメモ帳へ戻る", async ({ page }) => {
+  const notebookId = await createNotebook(page);
+  await page.getByRole("button", { name: "新規メモ" }).click();
+
+  const crumbs = page.getByRole("list", { name: "現在地" });
+  await expect(crumbs.getByRole("listitem")).toHaveText(["メモ帳", "新規メモ"]);
+  await crumbs.getByRole("button", { name: "メモ帳" }).click();
+
+  await expect(page).toHaveURL(`/?id=${notebookId}`);
+  await expect(page.getByRole("heading", { name: "メモ帳", exact: true })).toBeVisible();
 });

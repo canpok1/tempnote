@@ -20,12 +20,17 @@ export const TopScreen = ({ navigate }: { navigate: Navigate }) => {
 
   return (
     <section>
-      <p>使わなくなったら勝手に消えるメモ帳です。メモ帳の URL を知っている人なら誰でも読み書きできます。</p>
-      <p>最後に開いてから30日たったメモ帳は、中のメモごと自動で削除されます。</p>
+      <hgroup>
+        <h2>使わなくなったら勝手に消えるメモ帳</h2>
+        <p>メモ帳の URL を知っている人なら誰でも読み書きできます。</p>
+      </hgroup>
       {error && <p role="alert">エラー: {error}</p>}
-      <button type="button" onClick={create} disabled={creating}>
+      <button type="button" onClick={create} disabled={creating} aria-busy={creating}>
         {creating ? "作成中…" : "メモ帳を作る"}
       </button>
+      <p>
+        <small>最後に開いてから30日たったメモ帳は、中のメモごと自動で削除されます。</small>
+      </p>
     </section>
   );
 };
